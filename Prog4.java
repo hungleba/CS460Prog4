@@ -392,11 +392,7 @@ public class Prog4 {
             }
         }
         // Prompt for how many times the passenger ordered a beverage or snack 
-<<<<<<< HEAD
-        System.out.print("Please enter how many times the customer " + cusID 
-=======
         System.out.print("Please enter how many times the customerID " + cusID 
->>>>>>> 11b15f8047d036f06767af7f45fcfc84e568922b
                         + " ordered drink/snack on flight " + flightID + ": ");
         input = inputReader.nextLine().trim();
         try {
@@ -544,15 +540,9 @@ public class Prog4 {
         |           which has time overlap with the target flight
     *-------------------------------------------------------------------*/
     private static ArrayList<Integer> conflictFlight(Connection dbconn, Integer flightID){
-<<<<<<< HEAD
-        String query =  "SELECT flightID FROM flight WHERE  flightID NOT IN " +
-                        "(SELECT flightID FROM   flight" +
-                            " WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
-=======
         String query =  "SELECT flightID FROM flight WHERE flightID NOT IN " +
                         "(SELECT flightID FROM flight " +
                             "WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
->>>>>>> 11b15f8047d036f06767af7f45fcfc84e568922b
                                                         "FROM   flight WHERE flightID = " + flightID + ") " +
                             "OR (flight.departTime + flight.duration) >= (SELECT departTime " +
                                                                         "FROM   flight " + 
@@ -1445,30 +1435,29 @@ public class Prog4 {
         |  Returns:  None.
     *-------------------------------------------------------------------*/
     private static void queryOne(Connection dbconn) {
-        // String cusID_query = "SELECT DISTINCT CusID FROM CUSTOMER";
-        // Statement cusID_stmtt = null;
-        // ResultSet cusID_result = null;
-        // String current_cusID = null;
-        // String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
-        //                             "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
-        // Statement cusID_stmt = null;
-        // ResultSet cusID_result = null;
-        // try {
-        //     stmt = dbconn.createStatement();
-        //     answer = stmt.executeQuery(query);
-        //     if (answer != null) {
-        //         answer.next();
-        //         employeeId = answer.getInt("NEXTVAL");
-        //     }
-        //     stmt.close();  
-        // } catch (SQLException e) {
-        //         System.err.println("*** SQLException:  "
-        //             + "Could not get unique ID.");
-        //         System.err.println("\tMessage:   " + e.getMessage());
-        //         System.err.println("\tSQLState:  " + e.getSQLState());
-        //         System.err.println("\tErrorCode: " + e.getErrorCode());
-        //         System.exit(-1);
-        // }
+        String query = "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " + 
+                        "GROUP BY cusID HAVING COUNT(DISTINCT airlineID) = 4";
+
+        String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
+                                    "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
+        Statement cusID_stmt = null;
+        ResultSet cusID_result = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            if (answer != null) {
+                answer.next();
+                employeeId = answer.getInt("NEXTVAL");
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
     }
 
     public static void main(String[] args) {

@@ -356,18 +356,16 @@ public class Prog4 {
         input = inputReader.nextLine().trim();
         try {
             luggage = Integer.parseInt(input);
-            System.out.print("DEBUG: luggage entered: " + luggage);
         } catch (NumberFormatException nfe) {
             System.out.println("ERR: please enter an integer");
             return;
         }
         // Prompt for how many times the passenger ordered a beverage or snack 
         System.out.print("Please enter how many times the customer " + cusID 
-                        + "ordered drink/snack on flight " + flightID + ": ");
+                        + " ordered drink/snack on flight " + flightID + ": ");
         input = inputReader.nextLine().trim();
         try {
             order = Integer.parseInt(input);
-            System.out.print("DEBUG: order count entered: " + order);
         } catch (NumberFormatException nfe) {
             System.out.println("ERR: please enter an integer");
             return;
@@ -511,9 +509,9 @@ public class Prog4 {
         |           which has time overlap with the target flight
     *-------------------------------------------------------------------*/
     private static ArrayList<Integer> conflictFlight(Connection dbconn, Integer flightID){
-        String query =  "SELECT flightID FROM flight WHERE  flight NOT IN " +
+        String query =  "SELECT flightID FROM flight WHERE  flightID NOT IN " +
                         "(SELECT flightID FROM   flight" +
-                            "WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
+                            " WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
                                                         "FROM   flight WHERE flightID = " + flightID + ") " +
                             "OR (flight.departTime + flight.duration) >= (SELECT  departTime " +
                                                                         "FROM   flight " + 
@@ -1015,7 +1013,6 @@ public class Prog4 {
         String query = null;
         try {
             flightID = Integer.parseInt(input);
-            System.out.print("DEBUG: flightID for update flight " + flightID);
         } catch (NumberFormatException nfe) {
             System.out.println("ERR: please enter an integer");
             return;

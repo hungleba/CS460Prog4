@@ -129,6 +129,101 @@ public class Program4 {
         }
     }
 
+    /*---------------------------------------------------------------------
+        |  Method recordInsertionFlight(Connection dbconn, Scanner inputReader)
+        |
+        |  Purpose: prompt user for information of a new flight and 
+        |           insert its record accordingly into the FLIGHT table
+        |
+        |  Pre-condition: FLIGHT table already exists and can be inserted values into
+        |
+        |  Post-condition: None
+        |
+        |  Parameters:
+        |      dbconn -- a Connection object, use for Oracle database connection
+        |      inputReader -- a Java Scanner object, use to read input from users
+        |
+        |  Returns: a Connection object used to connect to Oracle database
+    *-------------------------------------------------------------------*/
+    private static void recordInsertionFlight(Connection dbconn, Scanner inputReader){
+        // Necessary fields to perform insertion
+        Integer flightId = null, airlineId = null, pilotId = null, crewId = null, groundStaffId = null;
+        String  flight_date = null;     // prompts user for format of yyyy/mm/dd
+        String  duration = null;
+        String  boardTime = null, departTime = null;        // prompt user for format hh24:mi
+        Integer boardGate = null;
+        String  depAirport = null, arrAirport = null;       // prompt user for 3-letter abbreviation
+
+        // Get unique ID for new flight from sequence
+        String query = "SELECT FLIGHT_SEQ.NEXTVAL FROM DUAL";
+        Statement stmt = null;
+        ResultSet answer = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            if (answer != null) {
+                answer.next();
+                flightId = answer.getInt("NEXTVAL");
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
+
+        System.out.println("Please enter details for new flight ID " + flightId);
+        // Prompt for airlineID
+        System.out.print("Please enter airlineID (1-4 for Delta : SouthWeset: United: Alaska): ");
+        String input = inputReader.nextLine().trim();
+        try {
+            airlineId = Integer.parseInt(input);
+            System.out.print("DEBUG: airlineID " + airlineID);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Prompt for pilotID, crew member ID and groundstaffID
+        System.out.print("Please enter pilotID, crew member ID and ground staff ID, separting by space: ");
+        String[] input = inputReader.nextLine().trim().split();
+        try {
+            pilotID = Integer.parseInt(input[0]);
+            crewID = Integer.parseInt(input[1]);
+            groundStaffId = Integer.parseInt(input[2]);
+            System.out.print("DEBUG: pilotID crewID and GSID: " + pilotID + " " + crewID + " " + groundStaffId);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        } catch (IndexOutOfBoundException e){
+            System.out.println("ERR: please enter 3 integers separated by space");
+            return;
+        }
+        // Prompt for flight date 
+        System.out.print("Please enter flight date in the format of yyyy/mm/dd: ");
+        String input = inputReader.nextLine().trim();
+        System.out.print("DEBUG: date " + input;
+        if (input.length() != 10 || input[4] != '/' || input[7] != '/'){
+            System.out.println("ERR: please enter the date in format yyyy/mm/dd");
+            return;
+        }
+        // Prompt for flight duration 
+        System.out.print("Please enter flight date in the format of yyyy/mm/dd: ");
+        String input = inputReader.nextLine().trim();
+        System.out.print("DEBUG: date " + input);
+        if (input.length() != 10 || input[4] != '/' || input[7] != '/'){
+            System.out.println("ERR: please enter the date in format yyyy/mm/dd");
+            return;
+        }
+
+
+
+
+        
+    }
+
     private static void recordDeletion(Connection dbconn, Scanner inputReader) {
         String input = "";
         Integer userInput = 0;
@@ -366,6 +461,6 @@ public class Program4 {
                 performQuery(dbconn, inputReader);
             }
         }
-        endProgram(dbconn, inputReader);
+        endProgram(dbconn, inputReader);  
     }
 }

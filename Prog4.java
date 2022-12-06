@@ -307,7 +307,7 @@ public class Prog4 {
         // Perform insertion
         query = "INSERT INTO FLIGHT "
             + "(FlightId, AirlineId, PilotId, CrewId, GroundStaffId, BoardGate, BoardTime, DepartTime, Duration, DepAirport, ArrAirport)"
-            + " VALUES (%s, %s, %s, %s, %s, %s, TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DSINTERVAL('%s'), '%s', '%s')";
+            + " VALUES (%s, %s, %s, %s, %s, %s, TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DSINTERVAL('+00 %s:00'), '%s', '%s')";
         final String finalQuery = String.format(query, flightId, airlineId, pilotId, crewId, groundStaffId, boardGate, 
             boardTime, departTime, duration, depAirport, arrAirport);
         try {
@@ -433,7 +433,7 @@ public class Prog4 {
         // Prompt for flight date 
         System.out.print("Please enter flight date in the format of yyyy/mm/dd: ");
         String input = inputReader.nextLine().trim();
-        System.out.print("DEBUG: date " + input;
+        System.out.print("DEBUG: date " + input);
         if (input.length() != 10 || input[4] != '/' || input[7] != '/'){
             System.out.println("ERR: please enter the date in format yyyy/mm/dd");
             return;
@@ -451,6 +451,177 @@ public class Prog4 {
 
 
         
+    }
+
+    private static void recordDeletionCustomer(Connection dbconn, Scanner inputReader) {
+        // Necessary fields for deletion
+        Integer customerId = null;
+        // Get customerId
+        System.out.print("Customer Id to delete: ");
+        String input = inputReader.nextLine().trim();
+        try {
+            customerId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Print delete menu
+        System.out.println("Which attribute from this customer do you want to delete?");
+        System.out.println("    1. All (this customer and his/her flight history will be deleted)");
+        System.out.println("    2. DOB");
+        System.out.println("    3. Address");
+        input = inputReader.nextLine().trim();
+        Integer customerChoice = null;
+        try {
+            customerChoice = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (customerChoice == 1) {
+            // Perform deletion
+            Statement stmt = null;
+            ResultSet answer = null;
+            String query = "DELETE FROM CUSTOMER WHERE CusId = %s";
+            final String finalQuery1 = String.format(query, customerId);
+            try {
+                stmt = dbconn.createStatement();
+                answer = stmt.executeQuery(finalQuery1);
+                stmt.close();  
+            } catch (SQLException e) {
+                    System.err.println("*** SQLException:  "
+                        + "Could not delete customer.");
+                    System.err.println("\tMessage:   " + e.getMessage());
+                    System.err.println("\tSQLState:  " + e.getSQLState());
+                    System.err.println("\tErrorCode: " + e.getErrorCode());
+                    System.exit(-1);
+            }
+            // Delete related flight history table
+            query = "DELETE FROM HISTORY WHERE CusId = %s";
+            final String finalQuery2 = String.format(query, customerId);
+            try {
+                stmt = dbconn.createStatement();
+                answer = stmt.executeQuery(finalQuery2);
+                stmt.close();  
+            } catch (SQLException e) {
+                    System.err.println("*** SQLException:  "
+                        + "Could not delete customer flight history.");
+                    System.err.println("\tMessage:   " + e.getMessage());
+                    System.err.println("\tSQLState:  " + e.getSQLState());
+                    System.err.println("\tErrorCode: " + e.getErrorCode());
+                    System.exit(-1);
+            }
+            System.out.println("Customer and his/her flight history are deleted!");
+        } else {
+            ArrayList<String> choices = new ArrayList<String>();
+            choices.add("DOB");
+            choices.add("Address");
+            Statement stmt = null;
+            ResultSet answer = null;
+            String query = "UPDATE CUSTOMER SET " + choices.get(customerChoice-2)+" = NULL WHERE CusId = "+customerId;
+            try {
+                stmt = dbconn.createStatement();
+                answer = stmt.executeQuery(query);
+                stmt.close();  
+            } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not delete customer attribute.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+            }
+            System.out.println("Attribute "+choices.get(customerChoice-2)+" deleted successfully!");
+        }
+    }
+
+    private static void recordDeletionFlight(Connection dbconn, Scanner inputReader) {
+        // Get flightId
+        Integer flightId = null;
+        System.out.println("*Note: All attributes of a flight record are essentials, so we can only delete the whole flight record");
+        System.out.print("Flight Id to delete: ");
+        String input = inputReader.nextLine().trim();
+        try {
+            flightId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Perform deletion
+        Statement stmt = null;
+        ResultSet answer = null;
+        String query = "DELETE FROM FLIGHT WHERE FlightId = %s";
+        final String finalQuery1 = String.format(query, flightId);
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(finalQuery1);
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not delete provided flight, please double check flightID.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        // Delete related flight from customer history table
+        query = "DELETE FROM HISTORY WHERE FlightId = %s";
+        final String finalQuery2 = String.format(query, flightId);
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(finalQuery2);
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not delete related flights from customer's flight history.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        System.out.println("Flight " + flightId + " and its related history records are deleted!");
+    }
+
+    private static void recordDeletionCustomerFlightHistory(Connection dbconn, Scanner inputReader) {
+        // Get customer ID
+        Integer customerId = null;
+        System.out.print("Which customer's history to delete? Customer ID: ");
+        String input = inputReader.nextLine().trim();
+        try {
+            customerId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Get flight ID
+        Integer flightId = null;
+        System.out.print("Which flight do you want to delete from this customer? Flight ID (Enter 0 to delete all): ");
+        input = inputReader.nextLine().trim();
+        try {
+            flightId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Perform deletion
+        Statement stmt = null;
+        ResultSet answer = null;
+        String query = "DELETE FROM HISTORY WHERE CusId = "+customerId;
+        if (!flightId.equals(0)) {
+            query += " AND FlightId = " + flightId;
+        }
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not delete from customer's flight history.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
     }
 
     private static void recordDeletion(Connection dbconn, Scanner inputReader) {
@@ -482,8 +653,132 @@ public class Prog4 {
         }
     }
 
+    private static void recordUpdateCustomer(Connection dbconn, Scanner inputReader) {
+        Integer customerId = null;
+        // Get customerId
+        System.out.print("Customer Id to update: ");
+        String input = inputReader.nextLine().trim();
+        try {
+            customerId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Print delete menu
+        System.out.println("Which attribute from this customer do you want to update?");
+        System.out.println("    1. Name");
+        System.out.println("    2. DOB");
+        System.out.println("    3. Address");
+        System.out.println("    4. FrequentFlyer");
+        System.out.println("    5. Student");
+        System.out.println("    6. Handicap");
+        input = inputReader.nextLine().trim();
+        Integer customerChoice = null;
+        try {
+            customerChoice = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        ArrayList<String> choices = new ArrayList<String>();
+        choices.add("Name");
+        choices.add("DOB");
+        choices.add("Address");
+        choices.add("FrequentFlyer");
+        choices.add("Student");
+        choices.add("Handicap");
+        // Get user's update value
+        if (customerChoice == 1 || customerChoice == 2 || customerChoice == 3) {
+            String query = null;
+            String updateValue = null;
+            if (customerChoice == 2) {
+                // Get DOB
+                System.out.print("Customer DOB (yyyy/mm/dd): ");
+                updateValue = inputReader.nextLine().trim();
+                query = "UPDATE CUSTOMER SET %s = TO_DATE('%s', 'yyyy/mm/dd') WHERE CusId = %s";
+            } else {
+                System.out.print("Update to: ");
+                updateValue = inputReader.nextLine().trim();
+                query = "UPDATE CUSTOMER SET %s = '%s' WHERE CusId = %s";
+            }
+            // Perform update
+            Statement stmt = null;
+            ResultSet answer = null;
+            final String finalQuery = String.format(query, choices.get(customerChoice-1), updateValue, customerId);
+            try {
+                stmt = dbconn.createStatement();
+                answer = stmt.executeQuery(finalQuery);
+                stmt.close();  
+            } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not update attribute.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+            }
+        } else {
+            Integer updateValue = null;
+            System.out.print("Update to (0 or 1 only): ");
+            input = inputReader.nextLine().trim();
+            try {
+                updateValue = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                return;
+            }
+            if (updateValue != 0 && updateValue != 1) {
+                System.out.println("ERR: Invalid benefit value");
+                return;
+            }
+            // Perform update
+            Statement stmt = null;
+            ResultSet answer = null;
+            String query = "UPDATE CUSTOMER SET %s = %s WHERE CusId = %s";
+            final String finalQuery = String.format(query, choices.get(customerChoice-1), updateValue, customerId);
+            try {
+                stmt = dbconn.createStatement();
+                answer = stmt.executeQuery(finalQuery);
+                stmt.close();  
+            } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not update attribute.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+            }
+        }
+        System.out.println("Update "+choices.get(customerChoice-1)+" for customer "+customerId+" successfully");
+    }
+
     private static void recordUpdate(Connection dbconn, Scanner inputReader) {
-        // TO-DO
+        String input = "";
+        Integer userInput = 0;
+        while (userInput != -1) {
+            System.out.println("Which data would you like to update? (Enter -1 to exit):");
+            System.out.println("    1. Customer");
+            System.out.println("    2. Flight");
+            System.out.println("    3. Customer's flight history");
+            input = inputReader.nextLine().trim();
+            try {
+                userInput = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                userInput = 0;
+                continue;
+            }
+            if (userInput == -1) {
+                break;
+            }
+            if (userInput == 1) {
+                recordUpdateCustomer(dbconn, inputReader);
+            } else if (userInput == 2) {
+                //recordUpdateFlight(dbconn, inputReader);
+            } else if (userInput == 3) {
+                //recordUpdateCustomerFlightHistory(dbconn, inputReader);
+            }
+        }
     }
 
     /*---------------------------------------------------------------------

@@ -317,12 +317,14 @@ public class Prog4 {
         String depAirport = inputReader.nextLine().trim();
         if (depAirport.length() != 3) {
             System.out.println("ERR: Invalid airport abbreviation");
+            return;
         }
         // Get arrAirport
         System.out.print("Arrival Airport (3 characters): ");
         String arrAirport = inputReader.nextLine().trim();
         if (arrAirport.length() != 3) {
             System.out.println("ERR: Invalid airport abbreviation");
+            return;
         }
         // Perform insertion
         query = "INSERT INTO FLIGHT "
@@ -478,9 +480,7 @@ public class Prog4 {
     private static boolean noOverLap(Connection dbconn, Integer cusID, Integer flightID){
         ArrayList<Integer> overlap = conflictFlight(dbconn, flightID);
         // query for other flights of given customer who has the update/new flight in history (exclusive)
-        String query =  "SELECT flightID FROM history WHERE cusID = " +cusID + 
-                        " AND "+ flightID + " IN (SELECT flightID FROM history WHERE cusID = " +cusID + ")" +
-                        " AND flightID != " + flightID;
+        String query =  "SELECT flightID FROM history WHERE cusID = " +cusID;
         Statement stmt = null;
         ResultSet result = null;
         ArrayList<Integer> cus_his = new ArrayList<>();
@@ -489,24 +489,14 @@ public class Prog4 {
             stmt = dbconn.createStatement();
             result = stmt.executeQuery(query);
             if (result != null) {
-                // no other flight rather than the target flight -> no time clash
-                if (!result.next()){
-                    stmt.close();
-                    return true;
-                }
-                else {
-                    if (overlap.contains(result.getInt("flightID"))){
-                        stmt.close();
-                        return false;
-                    }
-                }
                 // check if any of the flight in the history is the overlapping flight
                 while(result.next()){
-                    if (overlap.contains(result.getInt("flightID"))){
+                    if (overlap.contains(result.getInt("flightID")) && result.getInt("flightID") != flightID ){
                         stmt.close();
                         return false;
                     }
                 }
+                return true;
             }
             stmt.close();
             return true;  
@@ -542,9 +532,9 @@ public class Prog4 {
     private static ArrayList<Integer> conflictFlight(Connection dbconn, Integer flightID){
         String query =  "SELECT flightID FROM flight WHERE flightID NOT IN " +
                         "(SELECT flightID FROM flight " +
-                            "WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
+                            "WHERE flight.DepartTime >= (SELECT DepartTime + Duration " +
                                                         "FROM   flight WHERE flightID = " + flightID + ") " +
-                            "OR (flight.departTime + flight.duration) >= (SELECT departTime " +
+                            "OR (flight.departTime + flight.duration) <= (SELECT departTime " +
                                                                         "FROM   flight " + 
                                                                         "WHERE flightID = " + flightID + "))";
         Statement stmt = null;

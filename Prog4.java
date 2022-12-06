@@ -5,7 +5,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;  
 import java.time.format.DateTimeFormatter;  
 import java.util.Scanner;
-public class Program4 {
+public class Prog4 {
     /*---------------------------------------------------------------------
         |  Method endProgram(Connection dbconn, Scanner inputReader)
         |
@@ -97,6 +97,238 @@ public class Program4 {
         return dbconn;
     }
 
+    private static void recordInsertionCustomer(Connection dbconn, Scanner inputReader) {
+        // Get unique ID for new customer from sequence
+        Integer customerId = null;
+        String query = "SELECT CUSTOMER_SEQ.NEXTVAL FROM DUAL";
+        Statement stmt = null;
+        ResultSet answer = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            if (answer != null) {
+                answer.next();
+                customerId = answer.getInt("NEXTVAL");
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new customer.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        // Get customer name
+        System.out.print("Customer name: ");
+        String customerName = inputReader.nextLine().trim();
+        // Get customer DOB
+        System.out.print("Customer DOB (yyyy/mm/dd): ");
+        String DOB = inputReader.nextLine().trim();
+        // Get customer address
+        System.out.print("Customer address: ");
+        String customerAddress = inputReader.nextLine().trim();
+        // Get customer benefits
+        System.out.print("Is this customer a frequent flyer? (0 or 1): ");
+        Integer frequentFlyer = null;
+        String input = inputReader.nextLine().trim();
+        try {
+            frequentFlyer = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (frequentFlyer != 0 && frequentFlyer != 1) {
+            System.out.println("ERR: Invalid benefit value");
+            return;
+        }
+        System.out.print("Is this customer a student? (0 or 1): ");
+        Integer student = null;
+        input = inputReader.nextLine().trim();
+        try {
+            student = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (student != 0 && student != 1) {
+            System.out.println("ERR: Invalid benefit value");
+            return;
+        }
+        System.out.print("Is this customer a handicapped person? (0 or 1): ");
+        Integer handicap = null;
+        input = inputReader.nextLine().trim();
+        try {
+            handicap = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (handicap != 0 && handicap != 1) {
+            System.out.println("ERR: Invalid benefit value");
+            return;
+        }
+        // Perform customer insertion
+        query = "INSERT INTO CUSTOMER "
+            + "(CusId, Name, DOB, Address, FrequentFlyer, Student, Handicap)"
+            + " VALUES (%s, '%s', TO_DATE('%s', 'yyyy/mm/dd'), '%s', %s, %s, %s)";
+        final String finalQuery = String.format(query, customerId, customerName, DOB, customerAddress, frequentFlyer, student, handicap);
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(finalQuery);
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not add new customer, please double check DOB.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+    }
+
+    private static void recordInsertionFlight(Connection dbconn, Scanner inputReader) {
+        // Get unique ID for new flight from sequence
+        Integer flightId = null;
+        String query = "SELECT FLIGHT_SEQ.NEXTVAL FROM DUAL";
+        Statement stmt = null;
+        ResultSet answer = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            if (answer != null) {
+                answer.next();
+                flightId = answer.getInt("NEXTVAL");
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        // Get airlineId
+        Integer airlineId = null;
+        System.out.print("Airline ID: ");
+        String input = inputReader.nextLine().trim();
+        try {
+            airlineId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Get pilotId
+        Integer pilotId = null;
+        System.out.print("Pilot ID: ");
+        input = inputReader.nextLine().trim();
+        try {
+            pilotId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Get crewId
+        Integer crewId = null;
+        System.out.print("Crew ID: ");
+        input = inputReader.nextLine().trim();
+        try {
+            crewId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Get groundStaffId
+        Integer groundStaffId = null;
+        System.out.print("Ground staff ID: ");
+        input = inputReader.nextLine().trim();
+        try {
+            groundStaffId = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (pilotId == crewId || pilotId == groundStaffId || crewId == groundStaffId) {
+            System.out.println("It needs three different employees to operate the flight!");
+            return;
+        }
+        // Get boardGate
+        Integer boardGate = null;
+        System.out.print("Board Gate: ");
+        input = inputReader.nextLine().trim();
+        try {
+            boardGate = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Get duration
+        System.out.print("Duration of flight (hh:mm): ");
+        String duration = inputReader.nextLine().trim();
+        // Get boardTime
+        System.out.print("BoardTime (yyyy/mm/dd hh:mm): ");
+        String boardTime = inputReader.nextLine().trim();
+        // Get departTime
+        System.out.print("DepartTime (yyyy/mm/dd hh:mm): ");
+        String departTime = inputReader.nextLine().trim();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+        LocalDateTime boardTimeFormatted = LocalDateTime.parse(boardTime, formatter);
+        LocalDateTime departTimeFormatted = LocalDateTime.parse(departTime, formatter);
+        long diffInMins = java.time.Duration.between(boardTimeFormatted, departTimeFormatted).toMinutes();
+        if (diffInMins <= 0) {
+            System.out.println("ERR: Departure time must be after Board time!");
+            return;
+        } 
+        if (boardTimeFormatted.getYear() != departTimeFormatted.getYear() 
+        || boardTimeFormatted.getMonthValue() != departTimeFormatted.getMonthValue()   
+        || boardTimeFormatted.getDayOfMonth() != departTimeFormatted.getDayOfMonth()) {
+            System.out.println("ERR: Departure time and Board time must have the same date!");
+            return;
+        }
+        formatter = DateTimeFormatter.ofPattern("HH:mm");
+        LocalDateTime durationFormatted = LocalDateTime.parse(duration, formatter);
+        if (departTimeFormatted.getHour() + durationFormatted.getHour() >= 24) {
+            System.out.println("ERR: Departure time and Landing time must have the same date!");
+            return;
+        }
+        // Get depAirport
+        System.out.print("Departure Airport (3 characters): ");
+        String depAirport = inputReader.nextLine().trim();
+        if (depAirport.length() != 3) {
+            System.out.println("ERR: Invalid airport abbreviation");
+        }
+        // Get arrAirport
+        System.out.print("Arrival Airport (3 characters): ");
+        String arrAirport = inputReader.nextLine().trim();
+        if (arrAirport.length() != 3) {
+            System.out.println("ERR: Invalid airport abbreviation");
+        }
+        // Perform insertion
+        query = "INSERT INTO FLIGHT "
+            + "(FlightId, AirlineId, PilotId, CrewId, GroundStaffId, BoardGate, BoardTime, DepartTime, Duration, DepAirport, ArrAirport)"
+            + " VALUES (%s, %s, %s, %s, %s, %s, TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DATE('%s', 'yyyy/mm/dd hh24:mi'), TO_DSINTERVAL('%s'), '%s', '%s')";
+        final String finalQuery = String.format(query, flightId, airlineId, pilotId, crewId, groundStaffId, boardGate, 
+            boardTime, departTime, duration, depAirport, arrAirport);
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(finalQuery);
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not add new flight.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
+        System.out.println("Flight "+flightId+" added!");
+    }
+
+    private static void recordInsertionCustomerFlightHistory(Connection dbconn, Scanner inputReader) {
+        // TO-DO
+    }
+
     private static void recordInsertion(Connection dbconn, Scanner inputReader) {
         String input = "";
         Integer userInput = 0;
@@ -104,8 +336,7 @@ public class Program4 {
             System.out.println("Which data would you like to add? (Enter -1 to exit):");
             System.out.println("    1. Customer");
             System.out.println("    2. Flight");
-            System.out.println("    3. Employee");
-            System.out.println("    4. Customer's Flight History");
+            System.out.println("    3. Customer's Flight History");
             input = inputReader.nextLine().trim();
             try {
                 userInput = Integer.parseInt(input);
@@ -122,8 +353,6 @@ public class Program4 {
             } else if (userInput == 2) {
                 recordInsertionFlight(dbconn, inputReader);
             } else if (userInput == 3) {
-                recordInsertionEmployee(dbconn, inputReader);
-            } else if (userInput == 4) {
                 recordInsertionCustomerFlightHistory(dbconn, inputReader);
             }
         }
@@ -246,9 +475,9 @@ public class Program4 {
             if (userInput == 1) {
                 recordDeletionCustomer(dbconn, inputReader);
             } else if (userInput == 2) {
-                recordDeletionFlight(dbconn, inputReader, null);
+                recordDeletionFlight(dbconn, inputReader);
             } else if (userInput == 3) {
-                recordDeletionStaff(dbconn, inputReader);
+                recordDeletionCustomerFlightHistory(dbconn, inputReader);
             }
         }
     }

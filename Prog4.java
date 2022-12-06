@@ -326,7 +326,223 @@ public class Prog4 {
     }
 
     private static void recordInsertionCustomerFlightHistory(Connection dbconn, Scanner inputReader) {
-        // TO-DO
+        // Necessary fields to perform insertion
+        Integer flightId = null, cusID = null, luggage = null, order = null;
+
+        System.out.println("Please enter customer ID to add a flight history to: ");
+        // Prompt for cusID
+        String input = inputReader.nextLine().trim();
+        try {
+            cusID = Integer.parseInt(input);
+            System.out.print("DEBUG: cusID " + airlineID);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+
+        System.out.println("Please enter flightID that the customer flew on: ");
+        // Prompt for cusID
+        String input = inputReader.nextLine().trim();
+        try {
+            flightID = Integer.parseInt(input);
+            System.out.print("DEBUG: flightID " + flightID);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+
+        // Prompt for checked bag count
+        System.out.print("Please enter number of checked bag customer " + cusID 
+                        + "checked in for flight " + flightID + ": ");
+        String input = inputReader.nextLine().trim().split();
+        try {
+            luggage = Integer.parseInt(input);
+            System.out.print("DEBUG: luggage entered: " + luggage);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // Prompt for how many times the passenger ordered a beverage or snack 
+        System.out.print("Please enter how many times the customer " + cusID 
+                        + "ordered drink/snack on flight " + flightID + ": ");
+        String input = inputReader.nextLine().trim();
+        try {
+            order = Integer.parseInt(input);
+            System.out.print("DEBUG: order count entered: " + order);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (noOverLap(cusID, flightID)){
+            insertValidHistory(cusID, flightID, luggage, order);
+        }
+        else {
+            System.out.println("There is an overlapping flight for the customer. 
+                                Cannot finish the history insertion");
+        }
+        // get a list of flights that have time overlapped with the inserted flight 
+        // ArrayList<String> conflict_flight = conflictFlight(flightID);    
+        // check if the customer of the inserted history has any other flight overlapping with the inserted flight
+          
+    }
+
+    /*---------------------------------------------------------------------
+        |  Method insertValidHistory(Integer cusID, Integer flightID,
+        |                            Integer luggage, Integer order)
+        |
+        |  Purpose: performing insertion of a valid change into history table
+        |
+        |  Pre-condition: history table must exist 
+        |
+        |  Post-condition: None
+        |
+        |  Parameters:
+        |      flightID -- identifier of the target flight of which we are looking for
+        |                   overlapping flights.
+        |      cusID    -- identifier of the target customer to check history for 
+        |                   overlapping flight
+        |      luggage  -- integer representing the number of checked bag the customer has on this flight
+        |      order    -- total number of times the passenger order a drink or snack on the flight
+        |
+        |  Returns: true if the update/insertion of the flight is safe
+        |           false if the update/insertion of the flight results in time conflict in 
+        |           the customer's flight history
+    *-------------------------------------------------------------------*/
+    private static boolean insertValidHistory(Integer cusID, Integer flightID, Integer luggage, Integer order){
+        String query = "INSERT INTO history VALUES (" + cusID + ", " + flightID + ", " + luggage + ", " + order +")";
+        Statement stm = null;
+        ResultSet result = null;
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+    }
+    /*---------------------------------------------------------------------
+        |  Method noOverLap(Integer cusID, Integer flightID)
+        |
+        |  Purpose: check whether or not the customer will have time conflict
+        |           with the updated/newly inserted flight
+        |
+        |  Pre-condition: the input flight must exists in the FLIGHT table
+        |                 and the customer must exists in the CUSTOMER table
+        |
+        |  Post-condition: None
+        |
+        |  Parameters:
+        |      flightID -- identifier of the target flight of which we are looking for
+        |                   overlapping flights.
+        |      cusID    -- identifier of the target customer to check history for 
+        |                   overlapping flight
+        |
+        |  Returns: true if the update/insertion of the flight is safe
+        |           false if the update/insertion of the flight results in time conflict in 
+        |           the customer's flight history
+    *-------------------------------------------------------------------*/
+    private static boolean noOverLap(Integer cusID, Integer flightID){
+        ArrayList<Integer> overlap = conflictFlight(flightID);
+        // query for other flights of given customer who has the update/new flight in history (exclusive)
+        String query =  "SELECT flightID FROM history WHERE cusID = " +cusID + 
+                        " AND "+ flightID + " IN (SELECT flightID FROM history WHERE cusID = " +cusID + ")" +
+                        " AND flightID != " + flightID;
+        Statement stm = null;
+        ResultSet result = null;
+        ArrayList<Integer> cus_his = new ArrayList<>();
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result != null) {
+                // no other flight rather than the target flight -> no time clash
+                if (!result.next()){
+                    stmt.close();
+                    return true;
+                }
+                else {
+                    if (overlap.contains(result.getInt("flightID"))){
+                        stmt.close();
+                        return false;
+                    }
+                }
+                // check if any of the flight in the history is the overlapping flight
+                while(result.next()){
+                    if (overlap.contains(result.getInt("flightID"))){
+                        stmt.close();
+                        return false;
+                    }
+                }
+            }
+            stmt.close();
+            return true;  
+            
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+    }
+
+    /*---------------------------------------------------------------------
+        |  Method conflictFlight(Integer flightID)
+        |
+        |  Purpose: get a list of all flight that has time conflict
+        |           with the input flight (identified by flightID)
+        |
+        |  Pre-condition: the input flight must exists in the FLIGHT tables 
+        |
+        |  Post-condition: None
+        |
+        |  Parameters:
+        |      flightID -- identifier of the target flight of which we are looking for
+        |                   overlapping flights.
+        |
+        |  Returns: an ArrayList of Integer representing flightID of flights 
+        |           which has time overlap with the target flight
+    *-------------------------------------------------------------------*/
+    private static ArrayList<Integer> conflictFlight(Integer flightID){
+        String query =  "SELECT flightID FROM flight WHERE  flight NOT IN " +
+                        "(SELECT flightID FROM   flight" +
+                            "WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
+                                                        "FROM   flight WHERE flightID = " + flightID + ") " +
+                            "OR (flight.departTime + flight.duration) >= (SELECT  departTime " +
+                                                                        "FROM   flight " + 
+                                                                        "WHERE flightID = " + flightID + "))";
+        Statement stm = null;
+        ResultSet result = null;
+        ArrayList<Integer> ret = new ArrayList<>();
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result != null) {
+                // add all overlapping flightID excluding the compared flightID to the list
+                while(result.next()){
+                    if (!result.getInt("fligthID").equals(flightID)){
+                        ret.add(result.getInt("flightID"));
+                    }
+                }
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        return ret;
     }
 
     private static void recordInsertion(Connection dbconn, Scanner inputReader) {
@@ -356,101 +572,6 @@ public class Prog4 {
                 recordInsertionCustomerFlightHistory(dbconn, inputReader);
             }
         }
-    }
-
-    /*---------------------------------------------------------------------
-        |  Method recordInsertionFlight(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: prompt user for information of a new flight and 
-        |           insert its record accordingly into the FLIGHT table
-        |
-        |  Pre-condition: FLIGHT table already exists and can be inserted values into
-        |
-        |  Post-condition: None
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns: a Connection object used to connect to Oracle database
-    *-------------------------------------------------------------------*/
-    private static void recordInsertionFlight(Connection dbconn, Scanner inputReader){
-        // Necessary fields to perform insertion
-        Integer flightId = null, airlineId = null, pilotId = null, crewId = null, groundStaffId = null;
-        String  flight_date = null;     // prompts user for format of yyyy/mm/dd
-        String  duration = null;
-        String  boardTime = null, departTime = null;        // prompt user for format hh24:mi
-        Integer boardGate = null;
-        String  depAirport = null, arrAirport = null;       // prompt user for 3-letter abbreviation
-
-        // Get unique ID for new flight from sequence
-        String query = "SELECT FLIGHT_SEQ.NEXTVAL FROM DUAL";
-        Statement stmt = null;
-        ResultSet answer = null;
-        try {
-            stmt = dbconn.createStatement();
-            answer = stmt.executeQuery(query);
-            if (answer != null) {
-                answer.next();
-                flightId = answer.getInt("NEXTVAL");
-            }
-            stmt.close();  
-        } catch (SQLException e) {
-                System.err.println("*** SQLException:  "
-                    + "Could not get unique ID.");
-                System.err.println("\tMessage:   " + e.getMessage());
-                System.err.println("\tSQLState:  " + e.getSQLState());
-                System.err.println("\tErrorCode: " + e.getErrorCode());
-                System.exit(-1);
-        }
-
-        System.out.println("Please enter details for new flight ID " + flightId);
-        // Prompt for airlineID
-        System.out.print("Please enter airlineID (1-4 for Delta : SouthWeset: United: Alaska): ");
-        String input = inputReader.nextLine().trim();
-        try {
-            airlineId = Integer.parseInt(input);
-            System.out.print("DEBUG: airlineID " + airlineID);
-        } catch (NumberFormatException nfe) {
-            System.out.println("ERR: please enter an integer");
-            return;
-        }
-        // Prompt for pilotID, crew member ID and groundstaffID
-        System.out.print("Please enter pilotID, crew member ID and ground staff ID, separting by space: ");
-        String[] input = inputReader.nextLine().trim().split();
-        try {
-            pilotID = Integer.parseInt(input[0]);
-            crewID = Integer.parseInt(input[1]);
-            groundStaffId = Integer.parseInt(input[2]);
-            System.out.print("DEBUG: pilotID crewID and GSID: " + pilotID + " " + crewID + " " + groundStaffId);
-        } catch (NumberFormatException nfe) {
-            System.out.println("ERR: please enter an integer");
-            return;
-        } catch (IndexOutOfBoundException e){
-            System.out.println("ERR: please enter 3 integers separated by space");
-            return;
-        }
-        // Prompt for flight date 
-        System.out.print("Please enter flight date in the format of yyyy/mm/dd: ");
-        String input = inputReader.nextLine().trim();
-        System.out.print("DEBUG: date " + input;
-        if (input.length() != 10 || input[4] != '/' || input[7] != '/'){
-            System.out.println("ERR: please enter the date in format yyyy/mm/dd");
-            return;
-        }
-        // Prompt for flight duration 
-        System.out.print("Please enter flight date in the format of yyyy/mm/dd: ");
-        String input = inputReader.nextLine().trim();
-        System.out.print("DEBUG: date " + input);
-        if (input.length() != 10 || input[4] != '/' || input[7] != '/'){
-            System.out.println("ERR: please enter the date in format yyyy/mm/dd");
-            return;
-        }
-
-
-
-
-        
     }
 
     private static void recordDeletion(Connection dbconn, Scanner inputReader) {
@@ -483,7 +604,276 @@ public class Prog4 {
     }
 
     private static void recordUpdate(Connection dbconn, Scanner inputReader) {
-        // TO-DO
+        String input = "";
+        Integer userInput = 0;
+        while (userInput != -1) {
+            System.out.println("Which data would you like to update? (Enter -1 to exit):");
+            System.out.println("    1. Customer");
+            System.out.println("    2. Flight");
+            System.out.println("    3. Customer's flight history");
+            input = inputReader.nextLine().trim();
+            try {
+                userInput = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                userInput = 0;
+                continue;
+            }
+            if (userInput == -1) {
+                break;
+            }
+            if (userInput == 1) {
+                recordUpdateCustomer(dbconn, inputReader);
+            } else if (userInput == 2) {
+                recordUpdateFlight(dbconn, inputReader);
+            } else if (userInput == 3) {
+                recordUpdateCustomerFlightHistory(dbconn, inputReader);
+            }
+        }
+    }
+
+
+    private static void recordUpdateCustomerFlightHistory(Connection dbconn, Scanner inputReader){
+        System.out.println("Enter the cusID of the passenger to change flight history of: ");
+        String input = inputReader.nextLine().trim();
+        // get the cusID and flightID pair to be updated
+        Integer cusID = null;
+        Integer oldFlightID = null;
+        try {
+            cusID = Integer.parseInt(input);
+            System.out.println("Enter the flightID you want to update: ");
+            input = inputReader.nextLine().trim();
+            oldFlightID = Integer.parseInt(input);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        
+        System.out.println("Select a field of the history to maek update: ");
+        System.out.println("1. Update flightID ");
+        System.out.println("2. Update checked bag count");
+        System.out.println("3. Update beverage/snack order count");
+        Integer userChoice = null;
+        
+        input = inputReader.nextLine().trim();
+        // get the user option of which details about the tuple to change
+        try {
+                userChoice = Integer.parseInt(input);
+                
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+    
+        if (userChoice == 1){
+            System.out.println("Enter the new flightID you want to update the history to: ");
+            input = inputReader.nextLine().trim();
+            Integer newFlightID = Integer.parseInt(input);
+            if (!noOverLap(cusID, newFlightID)){
+                System.out.println("The update results in overlap flight(s) for the customer with ID of " + cusID);
+                System.out.println("The update will be abprted");
+                return;
+            }
+            query = "UPDATE history SET flightID = " + newFlightID + "Where cusID = " + cusID + " AND flightID = " + oldFlightID; 
+        } else if (userChoice == 2){
+            System.out.println("Enter the updated checked bag count: ");
+            input = inputReader.nextLine().trim();
+            Integer newCount = null;
+            try {
+                newCount = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                return;
+            }
+            if (newCount > 0){
+                query = "UPDATE history SET LuggageCount = " + newCount + "Where cusID = " + cusID + " AND flightID = " + oldFlightID; 
+            } else {
+                System.out.println("ERR: please enter an valid positive integer");
+                return;
+            }
+        }
+        else if (userChoice == 3){
+            System.out.println("Enter the updated beverage/snack order count: ");
+            input = inputReader.nextLine().trim();
+            Integer newCount = null;
+            try {
+                newCount = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                return;
+        }
+            if (newCount > 0){
+                query = "UPDATE history SET FoodOrderCount = " + newCount + "Where cusID = " + cusID + " AND flightID = " + oldFlightID; 
+            } else {
+                System.out.println("ERR: please enter an valid positive integer");
+                return;
+            }
+        }
+        else {
+            System.out.println("You selected an option other than the ones available (1-3)");
+            return;
+        }
+
+    }
+
+    private static void recordUpdateFlight(Connection dbconn, Scanner inputReader){
+        System.out.println("Please input an integer for the flightID of the flight you would like to update details on: ");
+        String input = inputReader.nextLine().trim();
+        Integer flightID = null;
+        String query = null;
+        try {
+            flightID = Integer.parseInt(input);
+            System.out.print("DEBUG: flightID for update flight " + flightID);
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        String option1 = "pilotID";
+        String option2 = "crewID";
+        String option3 = "groundStaffID";
+        String option4 = "boardGate";
+        String option51 = "boardTime";
+        String option52 = "departTime";
+        String option53 = "duration";
+        String option6 = "depAirport";
+        Strign option7 = "arrAirport";
+
+        String chosenOption = null;
+        System.out.println("Please select which detail you would like to change about the flight: ");
+        System.out.println("1.  PilotID");
+        System.out.println("2.  CrewID");
+        System.out.println("3.  GroundStaffID");
+        System.out.println("4.  BoardGate");
+        System.out.println("5.  BoardTime and DepartTime and Duration");        // all three has to be updated together
+        System.out.println("6.  DepAirport");
+        System.out.println("7.  ArrAirport");
+        System.out.println("Please select an option (1-7): ");
+        // get user input
+        input = inputReader.nextLine().trim();
+        Integer userSelection = Integer.parseInt(input);
+
+        if (userSelection == 1)    chosenOption = option1;
+        else if (userSelection == 2)    chosenOption = option2;
+        else if (userSelection == 3)    chosenOption = option3;
+        else if (userSelection == 4)    chosenOption = option4;
+        else if (userSelection == 5)    chosenOption = option51;
+        else if (userSelection == 6)    chosenOption = option6;
+        else if (userSelection == 7)    chosenOption = option7;
+
+        if (selectedOption == 1 || selectedOption == 2 || selectedOption == 3 || selectedOption == 4){
+            System.out.println("Please enter an integer for the selected details: ");
+            Integer update_val = Integer.parseInt(inputReader.nextLine().trim());
+            query = "UPDATE FLIGHT SET " + chosenOption + " = " +  update_val + "WHERE flightID = "+flightID;
+        } else if (selectedOption == 5){
+            // Get duration
+            System.out.print("Duration of flight (hh:mm): ");
+            String duration = inputReader.nextLine().trim();
+            // Get boardTime
+            System.out.print("BoardTime (yyyy/mm/dd hh:mm): ");
+            String boardTime = inputReader.nextLine().trim();
+            // Get departTime
+            System.out.print("DepartTime (yyyy/mm/dd hh:mm): ");
+            String departTime = inputReader.nextLine().trim();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+            LocalDateTime boardTimeFormatted = LocalDateTime.parse(boardTime, formatter);
+            LocalDateTime departTimeFormatted = LocalDateTime.parse(departTime, formatter);
+            long diffInMins = java.time.Duration.between(boardTimeFormatted, departTimeFormatted).toMinutes();
+            if (diffInMins <= 0) {
+                System.out.println("ERR: Departure time must be after Board time!");
+                return;
+            } 
+            if (boardTimeFormatted.getYear() != departTimeFormatted.getYear() 
+                || boardTimeFormatted.getMonthValue() != departTimeFormatted.getMonthValue()   
+                || boardTimeFormatted.getDayOfMonth() != departTimeFormatted.getDayOfMonth()) {
+                System.out.println("ERR: Departure time and Board time must have the same date!");
+                return;
+            }
+            formatter = DateTimeFormatter.ofPattern("HH:mm");
+            LocalDateTime durationFormatted = LocalDateTime.parse(duration, formatter);
+            if (departTimeFormatted.getHour() + durationFormatted.getHour() >= 24) {
+                System.out.println("ERR: Departure time and Landing time must have the same date!");
+                return;
+            }
+            if (!validChangeForAllPassenger(flightID)){
+                System.out.println("Update in the flight results in conflict in the flying history. 
+                                    Update can not be performed.");
+                return;
+            }
+            query = "UPDATE FLIGHT SET " + chosenOption51 + " = " +  boardTime 
+                                         + chosenOption52 + " = " +  departTime + 
+                                         + chosenOption53 + " = " +  duration + "WHERE flightID = "+flightID;
+        }
+        else if (selectedOption == 6 || selectedOption == 7){
+            System.out.println("Please enter an 3-letter abbreviation for the airport: ");
+            String newAirport = inputReader.nextLine().trim();
+            query = "UPDATE FLIGHT SET " + chosenOption + " = " +  update_val + "WHERE flightID = " +flightID;
+        }
+        else {
+            System.out.println("You did not select a valid option (1-7)");
+            return;
+        }
+
+        Statement stm = null;
+        ResultSet result = null;
+        ArrayList<Integer> cus_his = new ArrayList<>();
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            stmt.close();
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+    }
+    
+            // go to history, get a list of all passenger with the flightID, perform checking on each of them 
+            // looping thru all customer with that flight
+            //      noOverLap = false -> print cannot perform update -> return
+    private static boolean validChangeForAllPassenger(Integer flighID){
+        // get a list of customer who has the updated flight in their history
+        String query = "SELECT DISTINCT cusID FROM history WHERE fligthID = " + flightID;
+        Statement stm = null;
+        ResultSet result = null;
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result != null) {
+                // no other flight rather than the target flight -> no time clash
+                if (!result.next()){
+                    return true;
+                }
+                else {
+                    // if there is overlap with the first customer, return false
+                    if (!noOverLap(result.getInt("cusID"), flighID)){
+                        return false;
+                    }
+                }
+                // check if any of the flight in the history is the overlapping flight
+                while(result.next()){
+                    if (!noOverLap(result.getInt("cusID"), flighID)){
+                        return false;
+                    }
+                }
+            }
+            // if code reaches here, no overLap in existing customer is found, then the update is valid
+            return true;  
+            
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight.");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        } finally {
+            stmt.close();
+        }
     }
 
     /*---------------------------------------------------------------------

@@ -2,6 +2,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.LocalDateTime;  
 import java.time.format.DateTimeFormatter;  
 import java.util.Scanner;
@@ -113,7 +114,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not get unique ID for new customer.");
+                + "Could not get unique ID for new customer a00.");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -179,7 +180,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not add new customer, please double check DOB.");
+                + "Could not add new customer, please double check DOB. a01");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -203,7 +204,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not get unique ID for new flight.");
+                + "Could not get unique ID for new flight. a02");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -229,6 +230,10 @@ public class Prog4 {
             System.out.println("ERR: please enter an integer");
             return;
         }
+        if (getAirlineOfEmployee(dbconn, pilotId) != airlineId) {
+            System.out.println("ERR: pilot not belong to the airline");
+            return;
+        }
         // Get crewId
         Integer crewId = null;
         System.out.print("Crew ID: ");
@@ -239,6 +244,10 @@ public class Prog4 {
             System.out.println("ERR: please enter an integer");
             return;
         }
+        if (getAirlineOfEmployee(dbconn, crewId) != airlineId) {
+            System.out.println("ERR: crew not belong to the airline");
+            return;
+        }
         // Get groundStaffId
         Integer groundStaffId = null;
         System.out.print("Ground staff ID: ");
@@ -247,6 +256,10 @@ public class Prog4 {
             groundStaffId = Integer.parseInt(input);
         } catch (NumberFormatException nfe) {
             System.out.println("ERR: please enter an integer");
+            return;
+        }
+        if (getAirlineOfEmployee(dbconn, groundStaffId) != airlineId) {
+            System.out.println("ERR: ground staff not belong to the airline");
             return;
         }
         if (pilotId == crewId || pilotId == groundStaffId || crewId == groundStaffId) {
@@ -286,9 +299,16 @@ public class Prog4 {
             System.out.println("ERR: Departure time and Board time must have the same date!");
             return;
         }
-        formatter = DateTimeFormatter.ofPattern("HH:mm");
-        LocalDateTime durationFormatted = LocalDateTime.parse(duration, formatter);
-        if (departTimeFormatted.getHour() + durationFormatted.getHour() >= 24) {
+        LocalTime durationFormatted = LocalTime.parse(duration);
+        if (durationFormatted.getHour() < 1 || durationFormatted.getHour() > 5) {
+            System.out.println("ERR: Duration must be in range 1-5 hours");
+            return;
+        }
+        Integer carry = 0;
+        if (departTimeFormatted.getMinute() + durationFormatted.getMinute() >= 60) {
+            carry = 1;
+        }
+        if (departTimeFormatted.getHour() + durationFormatted.getHour() + carry >= 24) {
             System.out.println("ERR: Departure time and Landing time must have the same date!");
             return;
         }
@@ -316,7 +336,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
                 System.err.println("*** SQLException:  "
-                    + "Could not add new flight.");
+                    + "Could not add new flight. a03");
                 System.err.println("\tMessage:   " + e.getMessage());
                 System.err.println("\tSQLState:  " + e.getSQLState());
                 System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -351,8 +371,8 @@ public class Prog4 {
         }
 
         // Prompt for checked bag count
-        System.out.print("Please enter number of checked bag customer " + cusID 
-                        + "checked in for flight " + flightID + ": ");
+        System.out.print("Please enter number of checked bag for customerID " + cusID 
+                        + " checked in for flight " + flightID + ": ");
         input = inputReader.nextLine().trim();
         try {
             luggage = Integer.parseInt(input);
@@ -360,8 +380,23 @@ public class Prog4 {
             System.out.println("ERR: please enter an integer");
             return;
         }
+        if (getStudentStatus(dbconn, cusID) == 1) {
+            if (luggage > 3) {
+                System.out.println("ERR: Exceeding number of luggages for students (3)");
+                return;
+            }
+        } else if (getStudentStatus(dbconn, cusID) == 0) {
+            if (luggage > 2) {
+                System.out.println("ERR: Exceeding number of luggages for non-students (2)");
+                return;
+            }
+        }
         // Prompt for how many times the passenger ordered a beverage or snack 
+<<<<<<< HEAD
         System.out.print("Please enter how many times the customer " + cusID 
+=======
+        System.out.print("Please enter how many times the customerID " + cusID 
+>>>>>>> 11b15f8047d036f06767af7f45fcfc84e568922b
                         + " ordered drink/snack on flight " + flightID + ": ");
         input = inputReader.nextLine().trim();
         try {
@@ -416,7 +451,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not insert a new flight history.");
+                + "Could not insert a new flight history. a04");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -482,7 +517,7 @@ public class Prog4 {
             
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not get unique ID for new flight.");
+                + "Could not get unique ID for new flight. a05");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -509,11 +544,17 @@ public class Prog4 {
         |           which has time overlap with the target flight
     *-------------------------------------------------------------------*/
     private static ArrayList<Integer> conflictFlight(Connection dbconn, Integer flightID){
+<<<<<<< HEAD
         String query =  "SELECT flightID FROM flight WHERE  flightID NOT IN " +
                         "(SELECT flightID FROM   flight" +
                             " WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
+=======
+        String query =  "SELECT flightID FROM flight WHERE flightID NOT IN " +
+                        "(SELECT flightID FROM flight " +
+                            "WHERE flight.DepartTime <= (SELECT DepartTime + Duration " +
+>>>>>>> 11b15f8047d036f06767af7f45fcfc84e568922b
                                                         "FROM   flight WHERE flightID = " + flightID + ") " +
-                            "OR (flight.departTime + flight.duration) >= (SELECT  departTime " +
+                            "OR (flight.departTime + flight.duration) >= (SELECT departTime " +
                                                                         "FROM   flight " + 
                                                                         "WHERE flightID = " + flightID + "))";
         Statement stmt = null;
@@ -534,7 +575,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not get unique ID for new flight.");
+                + "Could not get unique ID for new flight. a06");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -609,7 +650,7 @@ public class Prog4 {
                 stmt.close();  
             } catch (SQLException e) {
                     System.err.println("*** SQLException:  "
-                        + "Could not delete customer flight history.");
+                        + "Could not delete customer flight history. a07");
                     System.err.println("\tMessage:   " + e.getMessage());
                     System.err.println("\tSQLState:  " + e.getSQLState());
                     System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -624,7 +665,7 @@ public class Prog4 {
                 stmt.close();  
             } catch (SQLException e) {
                     System.err.println("*** SQLException:  "
-                        + "Could not delete customer.");
+                        + "Could not delete customer. a08");
                     System.err.println("\tMessage:   " + e.getMessage());
                     System.err.println("\tSQLState:  " + e.getSQLState());
                     System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -644,7 +685,7 @@ public class Prog4 {
                 stmt.close();  
             } catch (SQLException e) {
                 System.err.println("*** SQLException:  "
-                    + "Could not delete customer attribute.");
+                    + "Could not delete customer attribute. a09");
                 System.err.println("\tMessage:   " + e.getMessage());
                 System.err.println("\tSQLState:  " + e.getSQLState());
                 System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -677,7 +718,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not delete related flights from customer's flight history.");
+                + "Could not delete related flights from customer's flight history. a10");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -692,7 +733,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not delete provided flight, please double check flightID.");
+                + "Could not delete provided flight, please double check flightID. a11");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -736,7 +777,7 @@ public class Prog4 {
             stmt.close();  
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not delete from customer's flight history.");
+                + "Could not delete from customer's flight history. a12");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -831,7 +872,7 @@ public class Prog4 {
                 stmt.close();  
             } catch (SQLException e) {
                 System.err.println("*** SQLException:  "
-                    + "Could not update attribute.");
+                    + "Could not update attribute. a13");
                 System.err.println("\tMessage:   " + e.getMessage());
                 System.err.println("\tSQLState:  " + e.getSQLState());
                 System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -862,7 +903,7 @@ public class Prog4 {
                 stmt.close();  
             } catch (SQLException e) {
                 System.err.println("*** SQLException:  "
-                    + "Could not update attribute in customer.");
+                    + "Could not update attribute in customer. a14");
                 System.err.println("\tMessage:   " + e.getMessage());
                 System.err.println("\tSQLState:  " + e.getSQLState());
                 System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -960,6 +1001,17 @@ public class Prog4 {
                 System.out.println("ERR: please enter an integer");
                 return;
             }
+            if (getStudentStatus(dbconn, cusID) == 1) {
+                if (newCount > 3) {
+                    System.out.println("ERR: Exceeding number of luggages for students (3)");
+                    return;
+                }
+            } else if (getStudentStatus(dbconn, cusID) == 0) {
+                if (newCount > 2) {
+                    System.out.println("ERR: Exceeding number of luggages for non-students (2)");
+                    return;
+                }
+            }
             if (newCount > 0){
                 query = "UPDATE history SET LuggageCount = " + newCount + "Where cusID = " + cusID + " AND flightID = " + oldFlightID; 
             } else {
@@ -997,7 +1049,7 @@ public class Prog4 {
             stmt.close();
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not update flight history.");
+                + "Could not update flight history. a15");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -1052,7 +1104,12 @@ public class Prog4 {
         if (userSelection == 1 || userSelection == 2 || userSelection == 3 || userSelection == 4){
             System.out.println("Please enter an integer for the selected details: ");
             Integer update_val = Integer.parseInt(inputReader.nextLine().trim());
-            query = "UPDATE FLIGHT SET " + chosenOption + " = " +  update_val + "WHERE flightID = "+flightID;
+            if (getAirlineOfEmployee(dbconn, update_val) == getAirlineOfFlight(dbconn, flightID)){
+                query = "UPDATE FLIGHT SET " + chosenOption + " = " +  update_val + "WHERE flightID = "+flightID;
+            } else {
+                System.out.println("The new employee does not belong to the airline operating this flight!");
+                return;
+            }
         } else if (userSelection == 5){
             // Get duration
             System.out.print("Duration of flight (hh:mm): ");
@@ -1077,9 +1134,16 @@ public class Prog4 {
                 System.out.println("ERR: Departure time and Board time must have the same date!");
                 return;
             }
-            formatter = DateTimeFormatter.ofPattern("HH:mm");
-            LocalDateTime durationFormatted = LocalDateTime.parse(duration, formatter);
-            if (departTimeFormatted.getHour() + durationFormatted.getHour() >= 24) {
+            LocalTime durationFormatted = LocalTime.parse(duration);
+            if (durationFormatted.getHour() < 1 || durationFormatted.getHour() > 5) {
+                System.out.println("ERR: Duration must be in range 1-5 hours");
+                return;
+            }
+            Integer carry = 0;
+            if (departTimeFormatted.getMinute() + durationFormatted.getMinute() >= 60) {
+                carry = 1;
+            }
+            if (departTimeFormatted.getHour() + durationFormatted.getHour() + carry >= 24) {
                 System.out.println("ERR: Departure time and Landing time must have the same date!");
                 return;
             }
@@ -1112,7 +1176,7 @@ public class Prog4 {
             stmt.close();
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not update flight.");
+                + "Could not update flight. a16");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
@@ -1159,13 +1223,85 @@ public class Prog4 {
             
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
-                + "Could not get unique ID for new flight.");
+                + "Could not get unique ID for new flight. a17");
             System.err.println("\tMessage:   " + e.getMessage());
             System.err.println("\tSQLState:  " + e.getSQLState());
             System.err.println("\tErrorCode: " + e.getErrorCode());
             System.exit(-1);
         }
         return true;
+    }
+
+    private static int getAirlineOfEmployee(Connection dbconn, Integer employeeId) {
+        String query = "SELECT AirlineId FROM EMPLOYEE WHERE employeeId = " + employeeId;
+        Statement stmt = null;
+        ResultSet result = null;
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result.next() == false) {
+                return -1;
+            } else {
+                return result.getInt("AirlineId");
+            }
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get airline for the provided employee id. a18");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        return -1;
+    }
+
+    private static int getAirlineOfFlight(Connection dbconn, Integer flightId) {
+        String query = "SELECT AirlineId FROM EMPLOYEE WHERE flightId = " + flightId;
+        Statement stmt = null;
+        ResultSet result = null;
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result.next() == false) {
+                return -1;
+            } else {
+                return result.getInt("AirlineId");
+            }
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get airline for the provided flight id. a19");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        return -1;
+    }
+
+    private static int getStudentStatus(Connection dbconn, Integer customerId) {
+        String query = "SELECT student FROM CUSTOMER WHERE cusid = " + customerId;
+        Statement stmt = null;
+        ResultSet result = null;
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result.next() == false) {
+                return -1;
+            } else {
+                return result.getInt("student");
+            }
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get student status from the customer.a20");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        return -1;
     }
 
     /*---------------------------------------------------------------------

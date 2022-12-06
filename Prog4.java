@@ -1300,34 +1300,35 @@ public class Prog4 {
         |
         |  Returns:  None.
     *-------------------------------------------------------------------*/
-    //private static void performQuery(Connection dbconn, Scanner inputReader) {
-        // System.out.println("----------------QUERY----------------");
-        // System.out.println("Please choose from one of the following queries to perform:");
-        // System.out.println("1. Display list of distinct passenger names who flew all 4 airlines in 2021.");
-        // System.out.println("2. For input airlines and a date in Mar 2021, display list of passenger and their checked bag count.");
-        // System.out.println("3. For input date in June 2021, display schedules of fligth in ascending order of boarding time.");
-        // System.out.println("4. For three categories (Student, Frequent Flyer and Handicap) of United Airlines, display passengers who:");
-        // System.out.println("\ta. Traveled only once in the month of March.");
-        // System.out.println("\tb. Traveled with exactly one checked in bag anytime in the months of June and July.");
-        // System.out.println("\tc. Ordered snacks/beverages on at least on one flight.");
-        // System.out.println("5. For an input airline, display all the total number of passengers in each category that flew in 2021.");
-        // Integer userInput = 0;
-        // while (userInput != -1){
-        //     String input = inputReader.nextLine().trim();
-        //     try {
-        //         userInput = Integer.parseInt(input);
-        //     } catch (NumberFormatException nfe) {
-        //         System.out.println("ERR: please enter an integer");
-        //         userInput = 0;
-        //         continue;
-        //     }
-        //     if (userInput == 1) queryOne(dbconn);
-        //     if (userInput == 1) queryTwo(dbconn, inputReader);
-        //     if (userInput == 1) queryThree(dbconn, inputReader);
-        //     if (userInput == 1) queryFour(dbconn);
-        //     if (userInput == 1) queryFive(dbconn, inputReader);
-        // }
-    //}
+    private static void performQuery(Connection dbconn, Scanner inputReader) {
+        System.out.println("----------------QUERY----------------");
+        Integer userInput = 0;
+        while (userInput != -1){
+            System.out.println("--------------------QUERY OPTIONS--------------------");
+            System.out.println("\t1. Display list of distinct passenger names who flew all 4 airlines in 2021.");
+            System.out.println("\t2. For input airlines and a date in Mar 2021, display list of passenger and their checked bag count.");
+            System.out.println("\t3. For input date in June 2021, display schedules of fligth in ascending order of boarding time.");
+            System.out.println("\t4. For three categories (Student, Frequent Flyer and Handicap) of United Airlines, display passengers who:");
+            System.out.println("\t\ta. Traveled only once in the month of March.");
+            System.out.println("\t\tb. Traveled with exactly one checked in bag anytime in the months of June and July.");
+            System.out.println("\t\tc. Ordered snacks/beverages on at least on one flight.");
+            System.out.println("\t5. For an input airline, display all the total number of passengers in each category that flew in 2021.");
+            System.out.print("Please choose from one of the following queries to perform (Enter -1 to exit):");
+            String input = inputReader.nextLine().trim();
+            try {
+                userInput = Integer.parseInt(input);
+            } catch (NumberFormatException nfe) {
+                System.out.println("ERR: please enter an integer");
+                userInput = 0;
+                continue;
+            }
+            if (userInput == 1) queryOne(dbconn);
+            if (userInput == 2) queryTwo(dbconn, inputReader);
+            if (userInput == 3) queryThree(dbconn, inputReader);
+            if (userInput == 4) queryFour(dbconn);
+            if (userInput == 5) queryFive(dbconn, inputReader);
+        }
+    }
 
     /*---------------------------------------------------------------------
         |  Method queryFive(Connection dbconn, Scanner inputReader)
@@ -1386,8 +1387,31 @@ public class Prog4 {
         |
         |  Returns:  None.
     *-------------------------------------------------------------------*/
-    //private static void queryThree(Connection dbconn, Scanner inputReader) {
-    //}
+    private static void queryThree(Connection dbconn, Scanner inputReader) {
+        System.out.println("---------------QUERY 3---------------");
+        // prompts user for a date in June 2021
+        System.out.print("Please enter interested date in June 2021 (01-31): ");
+        String input = inputReader.nextLine().trim();
+        Integer interestedDate = null;
+        // get the user option of which details about the tuple to change
+        try {
+            interestedDate = Integer.parseInt(input); 
+            if (interestedDate < 0 || interestedDate > 31){
+                System.err.println("Input invalid (1-31)");
+                return;
+            }
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // format the string representing the interested date
+        String inputDate = "2021/06/" + (interestedDate < 10 ? "0" : "") + interestedDate.toString();
+        String query = " SELECT FlightId, BoardGate, Name, BoardTime, DepartTime, Duration, ArrAirport, DepAirport " + 
+                        "FROM airlines " + 
+                        "JOIN (SELECT * FROM flight WHERE departTime BETWEEN TO_DATE('" + inputDate  +
+                     "', 'yyyy/mm/dd') AND TO_DATE('"+ inputDate + " 23:59:59', 'yyyy/mm/dd HH24:MI:SS')) USING (airlineID) ORDER BY boardTime";
+        System.out.println(query);
+    }
 
     /*---------------------------------------------------------------------
         |  Method queryTwo(Connection dbconn, Scanner inputReader)
@@ -1405,8 +1429,86 @@ public class Prog4 {
         |
         |  Returns:  None.
     *-------------------------------------------------------------------*/
-    //private static void queryTwo(Connection dbconn, Scanner inputReader) {
-    //}
+    private static void queryTwo(Connection dbconn, Scanner inputReader) {
+        System.out.println("---------------QUERY 2---------------");
+        // prompts user for a date in March 2021
+        System.out.print("Please enter interested date in March 2021 (01-31): ");
+        String input = inputReader.nextLine().trim();
+        Integer interestedDate = null;
+        // get the user option of which details about the tuple to change
+        try {
+            interestedDate = Integer.parseInt(input); 
+            if (interestedDate < 0 || interestedDate > 31){
+                System.err.println("Input invalid (1-31)");
+                return;
+            }
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        System.out.println("1. Delta ");
+        System.out.println("2. SouthWest ");
+        System.out.println("3. United ");
+        System.out.println("4. Alaska ");
+        System.out.print("Please enter interested airlineID (1-4): ");
+
+        input = inputReader.nextLine().trim();
+        Integer airlineID = null;
+        String airline = null;
+        // get the user option of which details about the tuple to change
+        try {
+            airlineID = Integer.parseInt(input); 
+            if (airlineID < 0 || airlineID > 4){
+                System.err.println("Input invalid (1-4)");
+                return;
+            }
+            if (airlineID == 1) airline = "Delta";
+            else if (airlineID == 2) airline = "SouthWest";
+            else if (airlineID == 3) airline = "United";
+            else airline = "Alaska";
+        } catch (NumberFormatException nfe) {
+            System.out.println("ERR: please enter an integer");
+            return;
+        }
+        // format the string representing the interested date
+        String inputDate = "2021/03/" + (interestedDate < 10 ? "0" : "") + interestedDate.toString();
+
+        System.out.println("-----Passgener who flew " + airline + " on March " + interestedDate.toString() + " 2021-----");
+        String query = " SELECT Name, luggageCount " + 
+                        "FROM customer JOIN history USING (cusID) " + 
+                        "JOIN (SELECT flightid FROM flight WHERE airlineID = " + airlineID + " AND departTime BETWEEN TO_DATE('" + inputDate  +
+                     "', 'yyyy/mm/dd') AND TO_DATE('"+ inputDate + " 23:59:59', 'yyyy/mm/dd HH24:MI:SS') ) USING (flightID) ORDER BY luggageCount";
+        //System.out.println(query);
+        
+        Statement stmt = null;
+        ResultSet result = null;
+        String space = " ";
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            ResultSetMetaData answermetadata = result.getMetaData();
+            for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                System.out.print(answermetadata.getColumnName(i) + space.repeat((50 - answermetadata.getColumnName(i).length())));
+            }
+            System.out.println();
+            if (result != null) {
+                while (result.next()){
+                    System.out.print(result.getString("name"));
+                    System.out.print(space.repeat((55 - result.getString("name").length())));
+                    System.out.print(result.getInt("luggageCount") + "\n");
+                }
+            }
+            System.out.println("--------------------END OF RESULT FROM QUERY 2--------------------");
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
+    }
 
     /*---------------------------------------------------------------------
         |  Method queryOne(Connection dbconn)
@@ -1424,199 +1526,32 @@ public class Prog4 {
         |
         |  Returns:  None.
     *-------------------------------------------------------------------*/
-    //private static void queryOne(Connection dbconn) {
-        // String query = "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " + 
-        //                 "GROUP BY cusID HAVING COUNT(DISTINCT airlineID) = 4";
-
-        // String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
-        //                             "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
-        // Statement cusID_stmt = null;
-        // ResultSet cusID_result = null;
-        // try {
-        //     stmt = dbconn.createStatement();
-        //     answer = stmt.executeQuery(query);
-        //     if (answer != null) {
-        //         answer.next();
-        //         employeeId = answer.getInt("NEXTVAL");
-        //     }
-        //     stmt.close();  
-        // } catch (SQLException e) {
-        //         System.err.println("*** SQLException:  "
-        //             + "Could not get unique ID.");
-        //         System.err.println("\tMessage:   " + e.getMessage());
-        //         System.err.println("\tSQLState:  " + e.getSQLState());
-        //         System.err.println("\tErrorCode: " + e.getErrorCode());
-        //         System.exit(-1);
-        // }
-    //}
-
-    /*---------------------------------------------------------------------
-        |  Method performQuery(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: elet the user choose from 5 queries to perform 
-        |
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: 
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    //private static void performQuery(Connection dbconn, Scanner inputReader) {
-        // System.out.println("----------------QUERY----------------");
-        // System.out.println("Please choose from one of the following queries to perform:");
-        // System.out.println("1. Display list of distinct passenger names who flew all 4 airlines in 2021.");
-        // System.out.println("2. For input airlines and a date in Mar 2021, display list of passenger and their checked bag count.");
-        // System.out.println("3. For input date in June 2021, display schedules of fligth in ascending order of boarding time.");
-        // System.out.println("4. For three categories (Student, Frequent Flyer and Handicap) of United Airlines, display passengers who:");
-        // System.out.println("\ta. Traveled only once in the month of March.");
-        // System.out.println("\tb. Traveled with exactly one checked in bag anytime in the months of June and July.");
-        // System.out.println("\tc. Ordered snacks/beverages on at least on one flight.");
-        // System.out.println("5. For an input airline, display all the total number of passengers in each category that flew in 2021.");
-        // Integer userInput = 0;
-        // while (userInput != -1){
-        //     String input = inputReader.nextLine().trim();
-        //     try {
-        //         userInput = Integer.parseInt(input);
-        //     } catch (NumberFormatException nfe) {
-        //         System.out.println("ERR: please enter an integer");
-        //         userInput = 0;
-        //         continue;
-        //     }
-        //     if (userInput == 1) queryOne(dbconn);
-        //     if (userInput == 1) queryTwo(dbconn, inputReader);
-        //     if (userInput == 1) queryThree(dbconn, inputReader);
-        //     if (userInput == 1) queryFour(dbconn);
-        //     if (userInput == 1) queryFive(dbconn, inputReader);
-        // }
-    //}
-
-    /*---------------------------------------------------------------------
-        |  Method queryFive(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: ask user for a specific airlines and print out count of 
-        |           distinct passengers of each categories who flew that airlines in 2021 
-        |
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: N/A
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    //private static void queryFive(Connection dbconn, Scanner inputReader) {
-    //}
-    /*---------------------------------------------------------------------
-        |  Method queryFour(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: For 3 categories of the passengers of United Airlines,
-        |   a.   Traveled only once in the month of March
-        |   b.   Traveled with exactly one checked in bag anytime in the months of June and July.
-        |   c.   Ordered snacks/beverages on at least on one flight.
-        |
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: N/A
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    // private static void queryFour(Connection dbconn) {
-    // }
-
-    /*---------------------------------------------------------------------
-        |  Method queryThree(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: For input date in June 2021, display schedules of flight
-        |           in ascending order of boarding time.
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: N/A
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    // private static void queryThree(Connection dbconn, Scanner inputReader) {
-    // }
-
-    /*---------------------------------------------------------------------
-        |  Method queryTwo(Connection dbconn, Scanner inputReader)
-        |
-        |  Purpose: For input date in June 2021, display schedules of flight
-        |           in ascending order of boarding time.
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: N/A
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    // private static void queryTwo(Connection dbconn, Scanner inputReader) {
-    // }
-
-    /*---------------------------------------------------------------------
-        |  Method queryOne(Connection dbconn)
-        |
-        |  Purpose: Display list of distinct passenger names who 
-        |           flew all 4 airlines in 2021.
-
-        |  Pre-condition:  tables inclduing data for the query already exist 
-        |                   in the database. 
-        |
-        |  Post-condition: N/A
-        |
-        |  Parameters:
-        |      dbconn -- a Connection object, use for Oracle database connection
-        |      inputReader -- a Java Scanner object, use to read input from users
-        |
-        |  Returns:  None.
-    *-------------------------------------------------------------------*/
-    // private static void queryOne(Connection dbconn) {
-    //     String cusID_query = "SELECT DISTINCT CusID FROM CUSTOMER";
-    //     Statement cusID_stmt = null;
-    //     ResultSet cusID_result = null;
-    //     String current_cusID = null;
-    //     String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
-    //                                 "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
-    //     Statement cusID_stmt = null;
-    //     ResultSet cusID_result = null;
-    //     try {
-    //         stmt = dbconn.createStatement();
-    //         answer = stmt.executeQuery(query);
-    //         if (answer != null) {
-    //             answer.next();
-    //             employeeId = answer.getInt("NEXTVAL");
-    //         }
-    //         stmt.close();  
-    //     } catch (SQLException e) {
-    //             System.err.println("*** SQLException:  "
-    //                 + "Could not get unique ID.");
-    //             System.err.println("\tMessage:   " + e.getMessage());
-    //             System.err.println("\tSQLState:  " + e.getSQLState());
-    //             System.err.println("\tErrorCode: " + e.getErrorCode());
-    //             System.exit(-1);
-    //     }
-    // }
+    private static void queryOne(Connection dbconn) {
+        System.out.println("-------------------------QUERY 1-------------------------");
+        System.out.println("-----Distinct passgener name who flew all four airlines in 2021-----");
+        String query = "SELECT DISTINCT CUSTOMER.NAME FROM (SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " + 
+                        "GROUP BY cusID HAVING COUNT(DISTINCT airlineID) = 4) JOIN CUSTOMER USING (cusID)" ;
+        Statement stmt = null;
+        ResultSet result = null;
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result != null) {
+                while (result.next()){
+                    System.out.println(result.getString("name"));
+                }
+            }
+            System.out.println("---------------END OF RESULT FROM QUERY 1---------------");
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
+    }
 
     public static void main(String[] args) {
         // Connecting to Oracle DB through JDBC.

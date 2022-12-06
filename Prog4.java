@@ -1045,7 +1045,6 @@ public class Prog4 {
         String query = null;
         try {
             flightID = Integer.parseInt(input);
-            System.out.print("DEBUG: flightID for update flight " + flightID);
         } catch (NumberFormatException nfe) {
             System.out.println("ERR: please enter an integer");
             return;
@@ -1426,30 +1425,29 @@ public class Prog4 {
         |  Returns:  None.
     *-------------------------------------------------------------------*/
     private static void queryOne(Connection dbconn) {
-        // String cusID_query = "SELECT DISTINCT CusID FROM CUSTOMER";
-        // Statement cusID_stmtt = null;
-        // ResultSet cusID_result = null;
-        // String current_cusID = null;
-        // String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
-        //                             "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
-        // Statement cusID_stmt = null;
-        // ResultSet cusID_result = null;
-        // try {
-        //     stmt = dbconn.createStatement();
-        //     answer = stmt.executeQuery(query);
-        //     if (answer != null) {
-        //         answer.next();
-        //         employeeId = answer.getInt("NEXTVAL");
-        //     }
-        //     stmt.close();  
-        // } catch (SQLException e) {
-        //         System.err.println("*** SQLException:  "
-        //             + "Could not get unique ID.");
-        //         System.err.println("\tMessage:   " + e.getMessage());
-        //         System.err.println("\tSQLState:  " + e.getSQLState());
-        //         System.err.println("\tErrorCode: " + e.getErrorCode());
-        //         System.exit(-1);
-        // }
+        String query = "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " + 
+                        "GROUP BY cusID HAVING COUNT(DISTINCT airlineID) = 4";
+
+        String flight_count_query = "SELECT COUNT(DISTINCT AirlineID) " +
+                                    "FROM HISTORY" + current_cusID+ "FROM CUSTOMER";
+        Statement cusID_stmt = null;
+        ResultSet cusID_result = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            if (answer != null) {
+                answer.next();
+                employeeId = answer.getInt("NEXTVAL");
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
     }
 
     public static void main(String[] args) {

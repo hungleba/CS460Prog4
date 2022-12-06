@@ -1430,7 +1430,7 @@ public class Prog4 {
         String handicap_A = handicap + queryA;
 
         STRING queryB = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
-                            "WHERE airlineID = 2 AND luggageCount = 1" + 
+                            "WHERE airlineID = 2 AND luggageCount = 1 AND " + 
                             "departTime BETWEEN TO_DATE('2021/06/01', 'yyyy/mm/dd') AND TO_DATE('2021/07/31 23:59:59', 'yyyy/mm/dd HH24:MI:SS') ";
         
         String student_B = student + queryB;
@@ -1438,6 +1438,114 @@ public class Prog4 {
         String fflier_B = fflier + queryB;
         String handicap_B = handicap + queryB;
 
+
+        Statement stmt = null;
+        ResultSet answer = null;
+        try {
+            // query A for student
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(student_A);
+            System.out.println("\n---Query A for student---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query A for student---\n");
+
+            // query A for frequent flier
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(fflier_A);
+            System.out.println("\n---Query A for frequent flier---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query A for frequent flier---\n");
+            
+            // query A for handicap
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(handicap_A);
+            System.out.println("\n---Query A for handicap---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query A for handicap---\n");
+
+            // query B for student
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(student_B);
+            System.out.println("\n---Query B for student---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query B for student---\n");
+            // query A for frequent flier
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(fflier_B);
+            System.out.println("\n---Query B for frequent flier---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query B for frequent flier---\n");
+            // query B for handicap
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(handicap_B);
+            System.out.println("\n---Query B for handicap---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                while (answer.next()) {
+                    System.out.println(answer.getInt("cusID"));
+                }
+            }
+            System.out.println("---End of Query B for handicap---\n");
+
+            // Shut down the connection to the DBMS.
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not fetch query results.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
     }
 
     /*---------------------------------------------------------------------

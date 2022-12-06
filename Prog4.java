@@ -1169,7 +1169,7 @@ public class Prog4 {
             //      noOverLap = false -> print cannot perform update -> return
     private static boolean validChangeForAllPassenger(Connection dbconn, Integer flightID){
         // get a list of customer who has the updated flight in their history
-        String query = "SELECT DISTINCT cusID FROM history WHERE fligthID = " + flightID;
+        String query = "SELECT DISTINCT cusID FROM history WHERE flightID = " + flightID;
         Statement stmt = null;
         ResultSet result = null;
         // execute the query 
@@ -1325,8 +1325,8 @@ public class Prog4 {
             if (userInput == 1) queryOne(dbconn);
             if (userInput == 2) queryTwo(dbconn, inputReader);
             if (userInput == 3) queryThree(dbconn, inputReader);
-            if (userInput == 4) queryFour(dbconn);
-            if (userInput == 5) queryFive(dbconn, inputReader);
+            //if (userInput == 4) queryFour(dbconn);
+            //if (userInput == 5) queryFive(dbconn, inputReader);
         }
     }
 
@@ -1410,6 +1410,42 @@ public class Prog4 {
                         "FROM airlines " + 
                         "JOIN (SELECT * FROM flight WHERE departTime BETWEEN TO_DATE('" + inputDate  +
                      "', 'yyyy/mm/dd') AND TO_DATE('"+ inputDate + " 23:59:59', 'yyyy/mm/dd HH24:MI:SS')) USING (airlineID) ORDER BY boardTime";
+        Statement stmt = null;
+        ResultSet answer = null;
+        try {
+            stmt = dbconn.createStatement();
+            answer = stmt.executeQuery(query);
+            System.out.println("\n---Start of the query result---\n");
+            if (answer != null) {
+                ResultSetMetaData answermetadata = answer.getMetaData();
+                for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
+                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                }
+                System.out.println();
+                    // Use next() to advance cursor through the result
+                    // tuples and print their attribute values
+                while (answer.next()) {
+                    System.out.println(answer.getInt("flightId") + "\t"
+                        + answer.getInt("BoardGate") + "\t\t"
+                        + answer.getString("Name") + "\t"
+                        + answer.getString("Boardtime") + "\t"
+                        + answer.getString("DepartTime") + "\t"
+                        + answer.getString("Duration") + "\t"
+                        + answer.getString("ArrAirport") + "\t"
+                        + answer.getString("DepAirport") + "\t");
+                }
+            }
+            System.out.println("---End of the query result---\n");
+                // Shut down the connection to the DBMS.
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not fetch query results.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
         System.out.println(query);
     }
 

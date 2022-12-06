@@ -1343,7 +1343,7 @@ public class Prog4 {
         |  Method queryFive(Connection dbconn, Scanner inputReader)
         |
         |  Purpose: ask user for a specific airlines and print out count of 
-        |           distinct passengers of each categories who flew that airlines in 2021 
+        |           distinct passengers of each categories who flew in 2021 
         |
         |  Pre-condition:  tables inclduing data for the query already exist 
         |                   in the database. 
@@ -1357,6 +1357,50 @@ public class Prog4 {
         |  Returns:  None.
     *-------------------------------------------------------------------*/
     private static void queryFive(Connection dbconn, Scanner inputReader) {
+        System.out.println("----------------------------QUERY 5----------------------------");
+        String query_FrequentFlyer= " SELECT COUNT(DISTINCT cusID) as total FROM customer JOIN history USING (cusID) WHERE FrequentFlyer = 1";
+        String query_Student= " SELECT COUNT(DISTINCT cusID) as total FROM customer JOIN history USING (cusID) WHERE student = 1";
+        String query_handicap= " SELECT COUNT(DISTINCT cusID)as total FROM customer JOIN history USING (cusID) WHERE handicap = 1";
+        
+        Statement stmt = null;
+        ResultSet result = null;
+        String space = " ";
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query_FrequentFlyer);
+            System.out.print("Number of distinct frequent flyer flying in 2021: ");
+            if (result != null) {
+                while (result.next()){
+                    System.out.println(result.getInt("total"));
+                }
+            }
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query_Student);
+            System.out.print("Number of distinct student flying in 2021: ");
+            if (result != null) {
+                while (result.next()){
+                    System.out.println(result.getInt("total"));
+                }
+            }
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query_FrequentFlyer);
+            System.out.print("Number of distinct handicap people flying in 2021: ");
+            if (result != null) {
+                while (result.next()){
+                    System.out.println(result.getInt("total"));
+                }
+            }
+            System.out.println("--------------------END OF RESULT FROM QUERY 5--------------------");
+            stmt.close();  
+        } catch (SQLException e) {
+                System.err.println("*** SQLException:  "
+                    + "Could not get unique ID.");
+                System.err.println("\tMessage:   " + e.getMessage());
+                System.err.println("\tSQLState:  " + e.getSQLState());
+                System.err.println("\tErrorCode: " + e.getErrorCode());
+                System.exit(-1);
+        }
+        
     }
     /*---------------------------------------------------------------------
         |  Method queryFour(Connection dbconn, Scanner inputReader)
@@ -1378,6 +1422,31 @@ public class Prog4 {
         |  Returns:  None.
     *-------------------------------------------------------------------*/
     private static void queryFour(Connection dbconn) {
+        String fflier = "SELECT cusID from customer WHERE FrequentFlyer = 1";
+        String student = "SELECT cusID from customer WHERE student = 1";
+        String handicap = "SELECT cusID from customer WHERE handicap = 1";
+    
+        STRING queryA = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
+                            "WHERE airlineID = 2 AND " + 
+                            "departTime BETWEEN TO_DATE('2021/03/01', 'yyyy/mm/dd') AND TO_DATE('2021/03/31 23:59:59', 'yyyy/mm/dd HH24:MI:SS') "+ 
+                            "GROUP BY cusID HAVING COUNT(*) = 1";
+
+        // airlineID = 2;
+        // query part a for student
+        String student_A = student + queryA;
+        //System.out.println(student_A);
+        String fflier_A = fflier + queryA;
+        String handicap_A = handicap + queryA;
+
+        STRING queryB = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
+                            "WHERE airlineID = 2 AND luggageCount = 1" + 
+                            "departTime BETWEEN TO_DATE('2021/06/01', 'yyyy/mm/dd') AND TO_DATE('2021/07/31 23:59:59', 'yyyy/mm/dd HH24:MI:SS') ";
+        
+        String student_B = student + queryB;
+        //System.out.println(student_A);
+        String fflier_B = fflier + queryB;
+        String handicap_B = handicap + queryB;
+
     }
 
     /*---------------------------------------------------------------------

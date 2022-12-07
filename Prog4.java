@@ -1162,7 +1162,15 @@ public class Prog4 {
                 System.out.println("ERR: Departure time and Landing time must have the same date!");
                 return;
             }
-            if (!validChangeForAllPassenger(dbconn, flightID, departStr, arriveStr)){
+            // Get new arrival time ( < 24)
+            int newTimeHour = departTimeFormatted.getHour() + durationFormatted.getHour() + carry;
+            int newTimeMinute = (departTimeFormatted.getMinute() + durationFormatted.getMinute()) % 60;
+            int newTimeYear = departTimeFormatted.getYear();
+            int newTimeMonth = departTimeFormatted.getMonthValue();
+            int newTimeDay = departTimeFormatted.getDayOfMonth();
+            String newTime = newTimeYear+"/"+newTimeMonth+"/"+newTimeDay+" "+newTimeHour+":"+newTimeMinute;
+            
+            if (!validChangeForAllPassenger(dbconn, flightID, departTime, newTime)){
                 System.out.println("Update in the flight results in conflict in the flying history."+
                                    " Update can not be performed.");
                 return;

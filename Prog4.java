@@ -403,7 +403,7 @@ public class Prog4 {
             System.out.println("ERR: please enter an integer");
             return;
         }
-        if (noOverLap(dbconn, cusID, flightID)){
+        if (noOverLap(dbconn, cusID, flightID, false, null, null)){
             insertValidHistory(dbconn, cusID, flightID, luggage, order);
         }
         else {
@@ -477,8 +477,10 @@ public class Prog4 {
         |           false if the update/insertion of the flight results in time conflict in 
         |           the customer's flight history
     *-------------------------------------------------------------------*/
-    private static boolean noOverLap(Connection dbconn, Integer cusID, Integer flightID){
-        ArrayList<Integer> overlap = conflictFlight(dbconn, flightID);
+    private static boolean noOverLap(Connection dbconn, Integer cusID, Integer flightID, boolean flightUpdate, String depStr, String arrStr){
+        ArrayList<Integer> overlap = null;
+        overlap = (flightUpdate ? conflictFlightIfUpdate(dbconn, depStr, arrStr) : conflictFlight(dbconn, flightID));
+        System.out.println("DEBUG finding overlap of flight ID " + flightID + "    "+ overlap.toString());
         // query for other flights of given customer who has the update/new flight in history (exclusive)
         String query =  "SELECT flightID FROM history WHERE cusID = " +cusID;
         Statement stmt = null;
@@ -537,6 +539,39 @@ public class Prog4 {
                             "OR (flight.departTime + flight.duration) <= (SELECT departTime " +
                                                                         "FROM   flight " + 
                                                                         "WHERE flightID = " + flightID + "))";
+        Statement stmt = null;
+        ResultSet result = null;
+        ArrayList<Integer> ret = new ArrayList<>();
+        // execute the query 
+        try {
+            stmt = dbconn.createStatement();
+            result = stmt.executeQuery(query);
+            if (result != null) {
+                // add all overlapping flightID excluding the compared flightID to the list
+                while(result.next()){
+                    if (result.getInt("flightID") != flightID){
+                        ret.add(result.getInt("flightID"));
+                    }
+                }
+            }
+            stmt.close();  
+        } catch (SQLException e) {
+            System.err.println("*** SQLException:  "
+                + "Could not get unique ID for new flight. a06");
+            System.err.println("\tMessage:   " + e.getMessage());
+            System.err.println("\tSQLState:  " + e.getSQLState());
+            System.err.println("\tErrorCode: " + e.getErrorCode());
+            System.exit(-1);
+        }
+        return ret;
+    }
+
+    // return all conflict flights if there is a schedule update
+    private static ArrayList<Integer> conflictFlightIfUpdate(Connection dbconn, Str depStr, Str arrStr){
+        String query =  "SELECT flightID FROM flight WHERE flightID NOT IN " +
+                        "(SELECT flightID FROM flight " +
+                            "WHERE flight.DepartTime >= TO_DATE('" + arrStr + "', 'yyyy/mm/dd hh24:mi')" + 
+                            "OR (flight.departTime + flight.duration) <= TO_DATE('" + departStr + "', 'yyyy/mm/dd hh24:mi')";
         Statement stmt = null;
         ResultSet result = null;
         ArrayList<Integer> ret = new ArrayList<>();
@@ -1127,13 +1162,13 @@ public class Prog4 {
                 System.out.println("ERR: Departure time and Landing time must have the same date!");
                 return;
             }
-            if (!validChangeForAllPassenger(dbconn, flightID)){
+            if (!validChangeForAllPassenger(dbconn, flightID, departStr, arriveStr)){
                 System.out.println("Update in the flight results in conflict in the flying history."+
                                    " Update can not be performed.");
                 return;
             }
-            query = "UPDATE FLIGHT SET " + option51 + " = " +  "TO_DATE('" + boardTime + "', 'yyyy/mm/dd hh24:mi'), " 
-                                         + option52 + " = " +  "TO_DATE('" + departTime + "', 'yyyy/mm/dd hh24:mi'), "  
+            query = "UPDATE FLIGHT SET " + option51 + " = " +  "TO_DATE('" + boardTime + "', 'yyyy/mm/dd HH24:MI'), " 
+                                         + option52 + " = " +  "TO_DATE('" + departTime + "', 'yyyy/mm/dd HH24:MI'), "  
                                          + option53 + " = " +  "TO_DSINTERVAL('+00 " + duration + ":00') WHERE flightID = "+flightID;
         }
         else if (userSelection == 6 || userSelection == 7){
@@ -1166,8 +1201,8 @@ public class Prog4 {
     
             // go to history, get a list of all passenger with the flightID, perform checking on each of them 
             // looping thru all customer with that flight
-            //      noOverLap = false -> print cannot perform update -> return
-    private static boolean validChangeForAllPassenger(Connection dbconn, Integer flightID){
+            // noOverLap = false -> print cannot perform update -> return
+    private static boolean validChangeForAllPassenger(Connection dbconn, Integer flightID, String departStr, String arriveStr){
         // get a list of customer who has the updated flight in their history
         String query = "SELECT DISTINCT cusID FROM history WHERE flightID = " + flightID;
         Statement stmt = null;
@@ -1184,14 +1219,14 @@ public class Prog4 {
                 }
                 else {
                     // if there is overlap with the first customer, return false
-                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID)){
+                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arrStr)){
                         stmt.close();
                         return false;
                     }
                 }
                 // check if any of the flight in the history is the overlapping flight
                 while(result.next()){
-                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID)){
+                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arrStr)){
                         stmt.close();
                         return false;
                     }

@@ -1301,7 +1301,6 @@ public class Prog4 {
         |  Returns:  None.
     *-------------------------------------------------------------------*/
     private static void performQuery(Connection dbconn, Scanner inputReader) {
-        System.out.println("----------------QUERY----------------");
         Integer userInput = 0;
         while (userInput != -1){
             System.out.println("--------------------QUERY OPTIONS--------------------");
@@ -1313,7 +1312,7 @@ public class Prog4 {
             System.out.println("\t\tb. Traveled with exactly one checked in bag anytime in the months of June and July.");
             System.out.println("\t\tc. Ordered snacks/beverages on at least on one flight.");
             System.out.println("\t5. For an input airline, display all the total number of passengers in each category that flew in 2021.");
-            System.out.print("Please choose from one of the following queries to perform (Enter -1 to exit):");
+            System.out.print("Please choose from one of the following queries to perform (Enter -1 to exit): ");
             String input = inputReader.nextLine().trim();
             try {
                 userInput = Integer.parseInt(input);
@@ -1325,8 +1324,8 @@ public class Prog4 {
             if (userInput == 1) queryOne(dbconn);
             if (userInput == 2) queryTwo(dbconn, inputReader);
             if (userInput == 3) queryThree(dbconn, inputReader);
-            //if (userInput == 4) queryFour(dbconn);
-            //if (userInput == 5) queryFive(dbconn, inputReader);
+            if (userInput == 4) queryFour(dbconn);
+            if (userInput == 5) queryFive(dbconn, inputReader);
         }
     }
 
@@ -1417,7 +1416,7 @@ public class Prog4 {
         String student = "SELECT cusID from customer WHERE student = 1";
         String handicap = "SELECT cusID from customer WHERE handicap = 1";
     
-        STRING queryA = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
+        String queryA = " INTERSECT " + "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " +
                             "WHERE airlineID = 2 AND " + 
                             "departTime BETWEEN TO_DATE('2021/03/01', 'yyyy/mm/dd') AND TO_DATE('2021/03/31 23:59:59', 'yyyy/mm/dd HH24:MI:SS') "+ 
                             "GROUP BY cusID HAVING COUNT(*) = 1";
@@ -1429,7 +1428,7 @@ public class Prog4 {
         String fflier_A = fflier + queryA;
         String handicap_A = handicap + queryA;
 
-        STRING queryB = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
+        String queryB = " INTERSECT " + "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " +
                             "WHERE airlineID = 2 AND luggageCount = 1 AND " + 
                             "departTime BETWEEN TO_DATE('2021/06/01', 'yyyy/mm/dd') AND TO_DATE('2021/07/31 23:59:59', 'yyyy/mm/dd HH24:MI:SS') ";
         
@@ -1438,7 +1437,7 @@ public class Prog4 {
         String fflier_B = fflier + queryB;
         String handicap_B = handicap + queryB;
 
-        STRING queryC = " INTERSECT " + "SELECT DISTINCT custID FROM history JOIN flight USING (flightID) " +
+        String queryC = " INTERSECT " + "SELECT DISTINCT cusID FROM history JOIN flight USING (flightID) " +
                             "WHERE airlineID = 2 AND FoodOrderCount > 0" ;
         String student_C = student + queryC;
         //System.out.println(student_A);
@@ -1461,6 +1460,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query A for student---\n");
 
@@ -1477,6 +1478,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query A for frequent flier---\n");
 
@@ -1493,6 +1496,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query A for handicap---\n");
 
@@ -1509,6 +1514,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query B for student---\n");
             // query A for frequent flier
@@ -1524,6 +1531,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query B for frequent flier---\n");
             // query B for handicap
@@ -1539,10 +1548,11 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query B for handicap---\n");
 
-            ________________
             // query C for student
             stmt = dbconn.createStatement();
             answer = stmt.executeQuery(student_C);
@@ -1556,6 +1566,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query C for student---\n");
 
@@ -1572,6 +1584,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query C for frequent flier---\n");
 
@@ -1588,6 +1602,8 @@ public class Prog4 {
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
+            }else {
+                System.out.println("No result");
             }
             System.out.println("---End of Query C for handicap---\n");
 
@@ -1678,7 +1694,6 @@ public class Prog4 {
                 System.err.println("\tErrorCode: " + e.getErrorCode());
                 System.exit(-1);
         }
-        System.out.println(query);
     }
 
     /*---------------------------------------------------------------------

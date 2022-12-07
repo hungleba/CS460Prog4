@@ -479,7 +479,7 @@ public class Prog4 {
     *-------------------------------------------------------------------*/
     private static boolean noOverLap(Connection dbconn, Integer cusID, Integer flightID, boolean flightUpdate, String depStr, String arrStr){
         ArrayList<Integer> overlap = null;
-        overlap = (flightUpdate ? conflictFlightIfUpdate(dbconn, depStr, arrStr) : conflictFlight(dbconn, flightID));
+        overlap = (flightUpdate ? conflictFlightIfUpdate(dbconn,flightID, depStr, arrStr) : conflictFlight(dbconn, flightID));
         System.out.println("DEBUG finding overlap of flight ID " + flightID + "    "+ overlap.toString());
         // query for other flights of given customer who has the update/new flight in history (exclusive)
         String query =  "SELECT flightID FROM history WHERE cusID = " +cusID;
@@ -567,11 +567,11 @@ public class Prog4 {
     }
 
     // return all conflict flights if there is a schedule update
-    private static ArrayList<Integer> conflictFlightIfUpdate(Connection dbconn, Str depStr, Str arrStr){
+    private static ArrayList<Integer> conflictFlightIfUpdate(Connection dbconn, Integer flightID, String depStr, String arrStr){
         String query =  "SELECT flightID FROM flight WHERE flightID NOT IN " +
                         "(SELECT flightID FROM flight " +
                             "WHERE flight.DepartTime >= TO_DATE('" + arrStr + "', 'yyyy/mm/dd hh24:mi')" + 
-                            "OR (flight.departTime + flight.duration) <= TO_DATE('" + departStr + "', 'yyyy/mm/dd hh24:mi')";
+                            "OR (flight.departTime + flight.duration) <= TO_DATE('" + depStr + "', 'yyyy/mm/dd hh24:mi'))";
         Statement stmt = null;
         ResultSet result = null;
         ArrayList<Integer> ret = new ArrayList<>();
@@ -1000,7 +1000,7 @@ public class Prog4 {
                 System.out.println("ERR: please enter an integer");
                 return;
             }
-            if (!noOverLap(dbconn, cusID, newFlightID)){
+            if (!noOverLap(dbconn, cusID, newFlightID, false, null, null)){
                 System.out.println("The update results in overlap flight(s) for the customer with ID of " + cusID);
                 System.out.println("The update will be abprted");
                 return;
@@ -1227,14 +1227,14 @@ public class Prog4 {
                 }
                 else {
                     // if there is overlap with the first customer, return false
-                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arrStr)){
+                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arriveStr)){
                         stmt.close();
                         return false;
                     }
                 }
                 // check if any of the flight in the history is the overlapping flight
                 while(result.next()){
-                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arrStr)){
+                    if (!noOverLap(dbconn, result.getInt("cusID"), flightID, true, departStr, arriveStr)){
                         stmt.close();
                         return false;
                     }

@@ -178,6 +178,7 @@ public class Prog4 {
             stmt = dbconn.createStatement();
             answer = stmt.executeQuery(finalQuery);
             stmt.close();  
+            System.out.println("--->New customer " + customerName + "with ID " + customerId + "added.");
         } catch (SQLException e) {
             System.err.println("*** SQLException:  "
                 + "Could not add new customer, please double check DOB. a01");
@@ -336,6 +337,7 @@ public class Prog4 {
             stmt = dbconn.createStatement();
             answer = stmt.executeQuery(finalQuery);
             stmt.close();  
+            System.out.println("--->New flight with ID " + flightId + " added.");
         } catch (SQLException e) {
                 System.err.println("*** SQLException:  "
                     + "Could not add new flight. a03");
@@ -344,7 +346,6 @@ public class Prog4 {
                 System.err.println("\tErrorCode: " + e.getErrorCode());
                 System.exit(-1);
         }
-        System.out.println("Flight "+flightId+" added!");
     }
 
     private static void recordInsertionCustomerFlightHistory(Connection dbconn, Scanner inputReader) {
@@ -405,14 +406,12 @@ public class Prog4 {
         }
         if (noOverLap(dbconn, cusID, flightID, false, null, null)){
             insertValidHistory(dbconn, cusID, flightID, luggage, order);
+            System.out.println("--->New history of customer ID "+ cusID + " on flight" + flightID + " added.");
         }
         else {
             System.out.println("There is an overlapping flight for the customer." +
                                " Cannot finish the history insertion");
         }
-        // get a list of flights that have time overlapped with the inserted flight 
-        // ArrayList<String> conflict_flight = conflictFlight(flightID);    
-        // check if the customer of the inserted history has any other flight overlapping with the inserted flight
           
     }
 
@@ -480,7 +479,7 @@ public class Prog4 {
     private static boolean noOverLap(Connection dbconn, Integer cusID, Integer flightID, boolean flightUpdate, String depStr, String arrStr){
         ArrayList<Integer> overlap = null;
         overlap = (flightUpdate ? conflictFlightIfUpdate(dbconn,flightID, depStr, arrStr) : conflictFlight(dbconn, flightID));
-        System.out.println("DEBUG finding overlap of flight ID " + flightID + "    "+ overlap.toString());
+        //System.out.println("DEBUG finding overlap of flight ID " + flightID + "    "+ overlap.toString());
         // query for other flights of given customer who has the update/new flight in history (exclusive)
         String query =  "SELECT flightID FROM history WHERE cusID = " +cusID;
         Statement stmt = null;
@@ -706,7 +705,7 @@ public class Prog4 {
                 System.err.println("\tErrorCode: " + e.getErrorCode());
                 System.exit(-1);
             }
-            System.out.println("Attribute "+choices.get(customerChoice-2)+" deleted successfully!");
+            System.out.println("--->Attribute "+choices.get(customerChoice-2)+" deleted successfully!");
         }
     }
 
@@ -755,7 +754,7 @@ public class Prog4 {
             System.exit(-1);
         }
         
-        System.out.println("Flight " + flightId + " and its related history records are deleted!");
+        System.out.println("--->Flight " + flightId + " and its related history records are deleted!");
     }
 
     private static void recordDeletionCustomerFlightHistory(Connection dbconn, Scanner inputReader) {
@@ -798,6 +797,7 @@ public class Prog4 {
             System.err.println("\tErrorCode: " + e.getErrorCode());
             System.exit(-1);
         }
+        System.out.println("--->History of customer ID "+ customerId + " on flight" + flightId + " deleted.");
     }
 
     private static void recordDeletion(Connection dbconn, Scanner inputReader) {
@@ -925,7 +925,7 @@ public class Prog4 {
                 System.exit(-1);
             }
         }
-        System.out.println("Update "+choices.get(customerChoice-1)+" for customer "+customerId+" successfully");
+        System.out.println("--->Update "+choices.get(customerChoice-1)+" for customer "+customerId+" successfully");
     }
 
     private static void recordUpdate(Connection dbconn, Scanner inputReader) {
@@ -976,9 +976,9 @@ public class Prog4 {
         }
         
         System.out.println("Select a field of the history to make update: ");
-        System.out.println("1. Update flightID ");
-        System.out.println("2. Update checked bag count");
-        System.out.println("3. Update beverage/snack order count");
+        System.out.println("\t1. Update flightID ");
+        System.out.println("\t2. Update checked bag count");
+        System.out.println("\ts3. Update beverage/snack order count");
         Integer userChoice = null;
         
         input = inputReader.nextLine().trim();
@@ -1070,6 +1070,7 @@ public class Prog4 {
             System.err.println("\tErrorCode: " + e.getErrorCode());
             System.exit(-1);
         }
+        System.out.println("--->History of customer ID "+ cusID + " updated.");
 
     }
 
@@ -1205,6 +1206,7 @@ public class Prog4 {
             System.err.println("\tErrorCode: " + e.getErrorCode());
             System.exit(-1);
         }
+        System.out.println("--->Flight with ID " + flightID + " updated.");
     }
     
             // go to history, get a list of all passenger with the flightID, perform checking on each of them 
@@ -1641,12 +1643,9 @@ public class Prog4 {
                 for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
                     System.out.print(answermetadata.getColumnName(i) + "\t");
                 }
-                System.out.println();
                 while (answer.next()) {
                     System.out.println(answer.getInt("cusID"));
                 }
-            }else {
-                System.out.println("No result");
             }
             System.out.println("---End of Query C for handicap---\n");
 
@@ -1703,6 +1702,7 @@ public class Prog4 {
                      "', 'yyyy/mm/dd') AND TO_DATE('"+ inputDate + " 23:59:59', 'yyyy/mm/dd HH24:MI:SS')) USING (airlineID) ORDER BY boardTime";
         Statement stmt = null;
         ResultSet answer = null;
+        String space = " ";
         try {
             stmt = dbconn.createStatement();
             answer = stmt.executeQuery(query);
@@ -1710,19 +1710,19 @@ public class Prog4 {
             if (answer != null) {
                 ResultSetMetaData answermetadata = answer.getMetaData();
                 for (int i = 1; i <= answermetadata.getColumnCount(); i++) {
-                    System.out.print(answermetadata.getColumnName(i) + "\t");
+                    System.out.print(answermetadata.getColumnName(i) + space.repeat(22 - answermetadata.getColumnName(i).length()));
                 }
                 System.out.println();
                     // Use next() to advance cursor through the result
                     // tuples and print their attribute values
                 while (answer.next()) {
-                    System.out.println(answer.getInt("flightId") + "\t"
-                        + answer.getInt("BoardGate") + "\t\t"
-                        + answer.getString("Name") + "\t"
-                        + answer.getString("Boardtime") + "\t"
-                        + answer.getString("DepartTime") + "\t"
-                        + answer.getString("Duration") + "\t"
-                        + answer.getString("ArrAirport") + "\t"
+                    System.out.println(answer.getInt("flightId") + space.repeat(22 - String.valueOf(answer.getInt("flightId")).length())
+                        + answer.getInt("BoardGate") + space.repeat(22 - String.valueOf(answer.getInt("BoardGate")).length())
+                        + answer.getString("Name") + space.repeat(22 - answer.getString("Name").length())
+                        + answer.getString("Boardtime") + space.repeat(22 - answer.getString("Boardtime").length())
+                        + answer.getString("DepartTime") + space.repeat(22 - answer.getString("DepartTime").length())
+                        + answer.getString("Duration") + space.repeat(22 - answer.getString("Duration").length())
+                        + answer.getString("ArrAirport") + space.repeat(22 - answer.getString("ArrAirport").length())
                         + answer.getString("DepAirport") + "\t");
                 }
             }
